@@ -2,7 +2,8 @@ import { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { JobDetails } from "@/components/job-details";
 import { getJobById, getRelatedJobs } from "@/lib/jobs/queries";
-import { calculateMatch, defaultProfile } from "@/lib/matching/calculateMatch";
+import { calculateMatch } from "@/lib/matching/calculateMatch";
+import { defaultProfile } from "@/lib/store/schema";
 
 interface Props {
   params: Promise<{ id: string }>;

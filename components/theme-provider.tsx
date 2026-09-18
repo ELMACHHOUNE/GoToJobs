@@ -1,6 +1,6 @@
 "use client";
 
-import { createContext, useContext, useEffect, useState, type ReactNode } from "react";
+import { createContext, useContext, useEffect, useMemo, useState, type ReactNode } from "react";
 import { ThemeProvider as NextThemesProvider } from "next-themes";
 
 type Theme = "light" | "dark" | "system";
@@ -19,7 +19,7 @@ function getInitialTheme(): Theme {
   return stored ?? "system";
 }
 
-function getInitialResolvedTheme(theme: Theme): "light" | "dark" {
+function computeResolvedTheme(theme: Theme): "light" | "dark" {
   if (typeof window === "undefined") return "light";
   if (theme === "system") {
     return window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light";
@@ -29,23 +29,14 @@ function getInitialResolvedTheme(theme: Theme): "light" | "dark" {
 
 export function ThemeProvider({ children, ...props }: { children: ReactNode } & Record<string, unknown>) {
   const [theme, setTheme] = useState<Theme>(getInitialTheme);
-  const [resolvedTheme, setResolvedTheme] = useState<"light" | "dark">(() =>
-    getInitialResolvedTheme(getInitialTheme())
-  );
+  const resolvedTheme = useMemo(() => computeResolvedTheme(theme), [theme]);
 
   useEffect(() => {
     localStorage.setItem("gotojobs.theme", theme);
     const root = document.documentElement;
     root.classList.remove("light", "dark");
-    if (theme === "system") {
-      const system = window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light";
-      root.classList.add(system);
-      setResolvedTheme(system);
-    } else {
-      root.classList.add(theme);
-      setResolvedTheme(theme);
-    }
-  }, [theme]);
+    root.classList.add(resolvedTheme);
+  }, [theme, resolvedTheme]);
 
   return (
     <ThemeContext.Provider value={{ theme, setTheme, resolvedTheme }}>

@@ -7,10 +7,10 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/com
 import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
 import { Separator } from "@/components/ui/separator";
-import { AlertDialog, AlertDialogTrigger, AlertDialogContent, AlertDialogHeader, AlertDialogTitle, AlertDialogDescription, AlertDialogCancel, AlertDialogAction } from "@/components/ui/alert-dialog";
+import { AlertDialog, AlertDialogTrigger, AlertDialogContent, AlertDialogHeader, AlertDialogTitle, AlertDialogDescription, AlertDialogCancel, AlertDialogAction, AlertDialogFooter } from "@/components/ui/alert-dialog";
 import { cn } from "@/lib/utils";
 
-export function SettingsPage() {
+export default function () {
   const { theme, setTheme, resolvedTheme } = useTheme();
   const { clearAll, load, persist } = useStore();
 
@@ -73,7 +73,7 @@ export function SettingsPage() {
               <Switch id={item.id} />
             </div>
           ))}
-        </CardContent
+        </CardContent>
       </Card>
 
       <Card className="border-destructive">
@@ -112,7 +112,7 @@ export function SettingsPage() {
               <p className="text-sm text-muted-foreground">Download your profile, saved jobs, and applications as JSON.</p>
             </div>
             <Button variant="outline" onClick={() => {
-              const { clearAll: _, load: _, persist: _, ...store } = useStore.getState();
+              const { clearAll, load, persist, ...store } = useStore.getState();
               const blob = new Blob([JSON.stringify(store, null, 2)], { type: "application/json" });
               const url = URL.createObjectURL(blob);
               const a = document.createElement("a");
@@ -131,7 +131,8 @@ export function SettingsPage() {
             </div>
             <Button variant="outline" disabled>Sync now</Button>
           </div>
-        </CardContent      </Card>
+</CardContent>
+      </Card>
 
       <Card>
         <CardHeader>
@@ -142,7 +143,7 @@ export function SettingsPage() {
           <p>Built with Next.js 16, TypeScript, Tailwind CSS, shadcn/ui</p>
           <p>Job data: Demo/mock data only</p>
           <p>Matching algorithm: Deterministic, transparent scoring</p>
-        </CardContent
+        </CardContent>
       </Card>
     </div>
   );

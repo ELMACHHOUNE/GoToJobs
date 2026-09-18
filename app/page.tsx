@@ -1,9 +1,10 @@
 import Link from "next/link";
-import { BriefcaseIcon, BookmarkIcon, ClipboardListIcon, BellIcon, ArrowRightIcon, SparklesIcon, ShieldIcon, ZapIcon } from "lucide-react";
+import { BriefcaseIcon, BookmarkIcon, ClipboardListIcon, BellIcon, ArrowRightIcon, SparklesIcon, ShieldIcon, ZapIcon, UserIcon } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { getQueryableJobs } from "@/lib/jobs/queries";
-import { calculateMatch, defaultProfile } from "@/lib/matching/calculateMatch";
+import { calculateMatch } from "@/lib/matching/calculateMatch";
+import { defaultProfile } from "@/lib/store/schema";
 
 function Hero() {
   return (

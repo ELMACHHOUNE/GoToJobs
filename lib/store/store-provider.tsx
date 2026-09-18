@@ -10,16 +10,27 @@ import {
   useState,
   type ReactNode,
 } from "react";
-import { appStateSchema, defaultAppState, defaultProfile, type AppState, type Profile, type ApplicationStatus, type JobApplication, type JobAlert } from "@/lib/store/schema";
+import {
+  appStateSchema,
+  defaultAppState,
+  defaultProfile,
+  type AppState,
+  type Profile,
+  type ApplicationStatus,
+  type JobApplication,
+  type JobAlert,
+} from "@/lib/store/schema";
 
 const STORAGE_KEY = "gotojobs.store.v1";
-const APP_UID = "gotojobs-demo";
 
 type PersistResult = { ok: true } | { ok: false; reason: string };
 
 type StoreContextValue = {
   appState: AppState;
   profile: Profile;
+  savedJobs: { id: string; jobId: string; savedAt: string }[];
+  applications: { id: string; jobId: string; status: ApplicationStatus; notes: string; createdAt: string; updatedAt: string }[];
+  alerts: { id: string; name: string; keywords: string[]; location: string; minMatchPercent: number; frequency: "daily" | "weekly"; enabled: boolean; createdAt: string; updatedAt: string }[];
   hydrated: boolean;
   seedProfileFromJob: (profile: Profile) => void;
   updateProfile: (patch: Partial<Profile>) => void;
@@ -27,13 +38,13 @@ type StoreContextValue = {
   toggleSave: (jobId: string) => void;
   isSaved: (jobId: string) => boolean;
   setApplicationStatus: (jobId: string, status: ApplicationStatus) => void;
-  getApplication: (jobId: string) => JobApplication | undefined;
+  getApplication: (jobId: string) => { id: string; jobId: string; status: ApplicationStatus; notes: string; createdAt: string; updatedAt: string } | undefined;
   removeApplication: (jobId: string) => void;
-  createAlert: (alert: Omit<JobAlert, "id" | "createdAt" | "updatedAt">) => void;
-  updateAlert: (id: string, patch: Partial<JobAlert>) => void;
+  createAlert: (alert: Omit<{ id: string; name: string; keywords: string[]; location: string; minMatchPercent: number; frequency: "daily" | "weekly"; enabled: boolean; createdAt: string; updatedAt: string }, "id" | "createdAt" | "updatedAt">) => void;
+  updateAlert: (id: string, patch: Partial<{ id: string; name: string; keywords: string[]; location: string; minMatchPercent: number; frequency: "daily" | "weekly"; enabled: boolean; createdAt: string; updatedAt: string }>) => void;
   removeAlert: (id: string) => void;
-  persist: () => PersistResult;
-  load: () => PersistResult;
+  persist: () => { ok: true } | { ok: false; reason: string };
+  load: () => { ok: true } | { ok: false; reason: string };
   clearAll: () => void;
 };
 
@@ -51,7 +62,7 @@ function readStorage(): AppState | null {
   }
 }
 
-function writeStorage(state: AppState): PersistResult {
+function writeStorage(state: AppState): { ok: true } | { ok: false; reason: string } {
   try {
     window.localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
     return { ok: true };
@@ -66,25 +77,25 @@ function getInitialAppState(): AppState {
   return existing ?? defaultAppState();
 }
 
+function getInitialHydrated(): boolean {
+  return typeof window !== "undefined";
+}
+
 export function StoreProvider({ children }: { children: ReactNode }) {
   const [appState, setAppState] = useState<AppState>(getInitialAppState);
-  const [hydrated, setHydrated] = useState(false);
-
-  useEffect(() => {
-    setHydrated(true);
-  }, []);
+  const [hydrated, setHydrated] = useState<boolean>(getInitialHydrated);
 
   const patchAppState = useCallback((patch: Partial<AppState>) => {
     setAppState((prev) => ({ ...prev, ...patch }));
   }, []);
 
-  const persist = useCallback((): PersistResult => {
+  const persist = useCallback((): { ok: true } | { ok: false; reason: string } => {
     const result = appStateSchema.safeParse(appState);
     if (!result.success) return { ok: false, reason: "State did not validate" };
     return writeStorage(result.data);
   }, [appState]);
 
-  const load = useCallback((): PersistResult => {
+  const load = useCallback((): { ok: true } | { ok: false; reason: string } => {
     const loaded = readStorage();
     if (!loaded) return { ok: false, reason: "No saved state" };
     setAppState(loaded);
@@ -186,6 +197,9 @@ export function StoreProvider({ children }: { children: ReactNode }) {
     () => ({
       appState,
       profile: appState.profile,
+      savedJobs: appState.savedJobs,
+      applications: appState.applications,
+      alerts: appState.alerts,
       hydrated,
       seedProfileFromJob,
       updateProfile,

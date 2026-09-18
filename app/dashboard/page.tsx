@@ -8,12 +8,13 @@ import { Progress } from "@/components/ui/progress";
 import { Button } from "@/components/ui/button";
 import { JobCard } from "@/components/job-card";
 import { EmptyState } from "@/components/empty-state";
-import { calculateMatch, defaultProfile } from "@/lib/matching/calculateMatch";
+import { calculateMatch } from "@/lib/matching/calculateMatch";
+import { defaultProfile } from "@/lib/store/schema";
 import { getQueryableJobs } from "@/lib/jobs/queries";
 import { useStore } from "@/lib/store/store-provider";
 import Link from "next/link";
 
-export function DashboardPage() {
+export default function () {
   const { profile, savedJobs, applications, alerts } = useStore();
   const allJobs = getQueryableJobs();
   const profileForMatch = defaultProfile();
@@ -213,7 +214,7 @@ function StatCard({ title, value, icon: Icon, description, action }: StatCardPro
       <CardContent>
         <p className="text-sm text-muted-foreground">{description}</p>
         {action && <div className="mt-3">{action}</div>}
-      </CardContent
+      </CardContent>
     </Card>
   );
 }

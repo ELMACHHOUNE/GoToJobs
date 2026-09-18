@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { GraduationCapIcon, BriefcaseIcon, MapPinIcon, SettingsIcon, PlusIcon, Trash2Icon, XIcon } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -24,7 +24,7 @@ import type { Profile } from "@/lib/store/schema";
 
 const EXPERIENCE_LEVELS = ["entry", "junior", "mid-level", "senior", "lead"] as const;
 
-export function ProfilePage() {
+export default function () {
   const { profile, updateProfile, resetProfile } = useStore();
   const [editing, setEditing] = useState(false);
   const [form, setForm] = useState<Partial<Profile>>({});
@@ -172,7 +172,6 @@ export function ProfilePage() {
           handleInputChange={handleInputChange}
           handleSave={handleSave}
           setEditing={setEditing}
-          education={education}
           setEducation={setEducation}
           editingEduIndex={editingEduIndex}
           setEditingEduIndex={setEditingEduIndex}
@@ -249,7 +248,7 @@ function ProfileView({
             ))}
             {profile.preferredRoles.length === 0 && <p className="text-muted-foreground">No preferred roles</p>}
           </div>
-        </CardContent
+        </CardContent>
       </Card>
 
       <Card>
@@ -263,7 +262,7 @@ function ProfileView({
             ))}
             {profile.preferredLocations.length === 0 && <p className="text-muted-foreground">No preferred locations</p>}
           </div>
-        </CardContent
+        </CardContent>
       </Card>
 
       <Card>
@@ -277,7 +276,7 @@ function ProfileView({
             ))}
             {profile.workplacePreferences.length === 0 && <p className="text-muted-foreground">No preferences set</p>}
           </div>
-        </CardContent
+        </CardContent>
       </Card>
 
       {profile.education.length > 0 && (
@@ -368,7 +367,6 @@ function ProfileForm({
   handleInputChange: (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => void;
   handleSave: () => void;
   setEditing: React.Dispatch<React.SetStateAction<boolean>>;
-  education: Profile["education"];
   setEducation: React.Dispatch<React.SetStateAction<Profile["education"]>>;
   editingEduIndex: number | null;
   setEditingEduIndex: React.Dispatch<React.SetStateAction<number | null>>;
@@ -563,8 +561,8 @@ function ProfileForm({
           <Button onClick={handleSave}>Save profile</Button>
           <Button variant="outline" onClick={() => setEditing(false)}>Cancel</Button>
         </div>
-      </CardContent
-    </Card>
+</CardContent>
+      </Card>
   );
 }
 

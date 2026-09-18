@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { searchJobs, getQueryableJobs, type JobQueryInput } from "@/lib/jobs/queries";
-import { defaultProfile } from "@/lib/matching/calculateMatch";
+import { defaultProfile } from "@/lib/store/schema";
 
 export async function GET(request: NextRequest) {
   const { searchParams } = new URL(request.url);

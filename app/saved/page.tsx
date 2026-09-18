@@ -9,7 +9,8 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { JobCard } from "@/components/job-card";
 import { EmptyState } from "@/components/empty-state";
-import { calculateMatch, defaultProfile } from "@/lib/matching/calculateMatch";
+import { calculateMatch } from "@/lib/matching/calculateMatch";
+import { defaultProfile } from "@/lib/store/schema";
 import { getQueryableJobs } from "@/lib/jobs/queries";
 import { useStore } from "@/lib/store/store-provider";
 
@@ -20,7 +21,7 @@ const FILTER_OPTIONS = [
   { value: "recent", label: "Recently saved" },
 ] as const;
 
-export function SavedJobsPage() {
+export default function () {
   const { savedJobs, profile, isSaved, toggleSave, removeApplication } = useStore();
   const [filter, setFilter] = useState<typeof FILTER_OPTIONS[0]["value"]>("all");
 

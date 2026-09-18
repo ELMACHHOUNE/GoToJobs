@@ -31,7 +31,7 @@ import { cn } from "@/lib/utils";
 
 const FREQUENCIES = ["daily", "weekly"] as const;
 
-export function AlertsPage() {
+export default function () {
   const { alerts, createAlert, updateAlert, removeAlert } = useStore();
   const [open, setOpen] = useState(false);
   const [editing, setEditing] = useState<JobAlert | null>(null);

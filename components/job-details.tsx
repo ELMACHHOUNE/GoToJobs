@@ -1,7 +1,7 @@
 "use client";
 
 import { cn } from "@/lib/utils";
-import { Building2Icon, MapPinIcon, BriefcaseIcon, ClockIcon, CalendarIcon, ExternalLinkIcon, HeartIcon, HeartOffIcon, ArrowLeftIcon } from "lucide-react";
+import { Building2Icon, MapPinIcon, BriefcaseIcon, ClockIcon, CalendarIcon, ExternalLinkIcon, HeartIcon, HeartOffIcon, ArrowLeftIcon, ClipboardListIcon } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -351,7 +351,8 @@ export function JobDetails({ job, match, related }: JobDetailsProps) {
               <Button variant="ghost" className="w-full justify-start" asChild>
                 <Link href={`/jobs/${job.id}`}>Share this job</Link>
               </Button>
-            </CardContent          </Card>
+            </CardContent>
+          </Card>
         </div>
       </div>
     </div>

@@ -8,7 +8,8 @@ import { Badge } from "@/components/ui/badge";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { JobCard } from "@/components/job-card";
 import { EmptyState } from "@/components/empty-state";
-import { calculateMatch, defaultProfile } from "@/lib/matching/calculateMatch";
+import { calculateMatch } from "@/lib/matching/calculateMatch";
+import { defaultProfile } from "@/lib/store/schema";
 import { getQueryableJobs } from "@/lib/jobs/queries";
 import { useStore } from "@/lib/store/store-provider";
 import type { ApplicationStatus } from "@/lib/store/schema";
@@ -31,7 +32,7 @@ const STATUS_COLORS: Record<ApplicationStatus, string> = {
   withdrawn: "bg-amber-100 text-amber-800 dark:bg-amber-900/30 dark:text-amber-300",
 };
 
-export function ApplicationsPage() {
+export default function () {
   const { applications, profile, getApplication, setApplicationStatus, removeApplication } = useStore();
   const [mobileColumn, setMobileColumn] = useState<ApplicationStatus>("saved");
 
@@ -127,7 +128,7 @@ export function ApplicationsPage() {
                             </div>
                           </CardContent>
                         </Card>
-                      ))}
+                      ))
                     )}
                   </div>
                 </div>

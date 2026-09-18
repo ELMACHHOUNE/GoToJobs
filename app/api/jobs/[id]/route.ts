@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getJobById, getRelatedJobs } from "@/lib/jobs/queries";
-import { calculateMatch, defaultProfile } from "@/lib/matching/calculateMatch";
+import { calculateMatch } from "@/lib/matching/calculateMatch";
+import { defaultProfile } from "@/lib/store/schema";
 
 export async function GET(
   request: NextRequest,
