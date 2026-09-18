@@ -10,7 +10,7 @@ import {
   useState,
   type ReactNode,
 } from "react";
-import { appStateSchema, defaultAppState, defaultProfile, type AppState, type Profile } from "@/lib/store/schema";
+import { appStateSchema, defaultAppState, defaultProfile, type AppState, type Profile, type ApplicationStatus, type JobApplication, type JobAlert } from "@/lib/store/schema";
 
 const STORAGE_KEY = "gotojobs.store.v1";
 const APP_UID = "gotojobs-demo";
@@ -60,19 +60,17 @@ function writeStorage(state: AppState): PersistResult {
   }
 }
 
+function getInitialAppState(): AppState {
+  if (typeof window === "undefined") return defaultAppState();
+  const existing = readStorage();
+  return existing ?? defaultAppState();
+}
+
 export function StoreProvider({ children }: { children: ReactNode }) {
-  const [appState, setAppState] = useState<AppState>(() => defaultAppState());
-  const [hydrated, setHydrated] = useState(falseWrite);
+  const [appState, setAppState] = useState<AppState>(getInitialAppState);
+  const [hydrated, setHydrated] = useState(false);
 
   useEffect(() => {
-    const existing = readStorage();
-    if (existing) {
-      setAppState(existing);
-      setHydrated(true);
-      return;
-    }
-    const seeded = defaultAppState();
-    setAppState(seeded);
     setHydrated(true);
   }, []);
 

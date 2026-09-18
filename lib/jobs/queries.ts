@@ -4,6 +4,7 @@ import { normalizeSkill } from "@/lib/matching/normalizeSkill";
 import { getMockJobs } from "@/lib/jobs/mock";
 import type {
   DatePostedFilter,
+  EmploymentType,
   ExperienceLevel,
   Job,
   JobSearchParams,
@@ -71,7 +72,7 @@ export function searchJobs({
 }: JobQueryInput = {}): JobQueryResult {
   const source = getQueryableJobs();
   const term = q.trim().toLowerCase();
-  const termTokens = term.split(/\s+/).filter(Booleanasse);
+  const termTokens = term.split(/\s+/).filter(Boolean);
 
   const filtered = source.filter((job) => {
     if (locations?.length && !locations.some((l) => job.location?.toLowerCase().includes(l.toLowerCase()))) {
@@ -79,7 +80,7 @@ export function searchJobs({
     }
     if (
       workplaceTypes?.length &&
-      !workplaceTypes.includes(job.workplaceType ?? "none")
+      (!job.workplaceType || !workplaceTypes.includes(job.workplaceType))
     ) {
       return false;
     }
@@ -176,18 +177,20 @@ function scoreRelevance(job: Job, tokens: string[]): number {
 }
 
 export function getJobById(id: string): Job | undefined {
-  return getMockJobs().find((j) => j.id === id);
+  return getMockJobs().find((j: Job) => j.id === id);
 }
 
 export function getRelatedJobs(job: Job, limit = 4): Job[] {
-  const jobs = getMockJobs().filter((j) => j.id !== job.id);
+  if (!job.skills || job.skills.length === 0) return [];
+  const jobs = getMockJobs().filter((j: Job) => j.id !== job.id);
   const want = new Set(job.skills.map(normalizeSkill));
   return jobs
-    .map((candidate) => {
-      const have = candidate.skills.filter((s) => want.has(normalizeSkill(s))).length;
+    .map((candidate: Job) => {
+      const have = candidate.skills.filter((s: string) => want.has(normalizeSkill(s))).length;
       return { candidate, have };
     })
-    .sort((a, b) => b.have - a.have)
+    .filter((x) => x.have > 0)
+    .sort((a: { candidate: Job; have: number }, b: { candidate: Job; have: number }) => b.have - a.have)
     .slice(0, limit)
-    .map((x) => x.candidate);
+    .map((x: { candidate: Job; have: number }) => x.candidate);
 }

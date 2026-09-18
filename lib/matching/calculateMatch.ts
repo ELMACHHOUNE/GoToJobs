@@ -1,4 +1,4 @@
-import type { Job } from "@/lib/jobs/types";
+import type { Job, ExperienceLevel } from "@/lib/jobs/types";
 import { normalizeSkill } from "@/lib/matching/normalizeSkill";
 import type { Profile } from "@/lib/store/schema";
 
@@ -19,7 +19,7 @@ export const MATCH_WEIGHTS = {
 } as const;
 
 /** Rough expected years for each experience band, used by the experience axis. */
-const EXPERIENCE_YEARS: Record<Job["experienceLevel"], number> = {
+const EXPERIENCE_YEARS: Record<ExperienceLevel, number> = {
   entry: 0,
   junior: 2,
   "mid-level": 4,
@@ -82,7 +82,7 @@ function titleScore(profile: Profile, job: Job): number {
   if (meaningful.length === 0) return 55; // profile silent on roles — neutral
   const best = meaningful
     .map((role) => (containsToken(job.title, role) || containsToken(role, job.title) ? 100 : 0))
-    .reduce((a, b) => Math.max(a, b), 0);
+    .reduce((a: number, b: number) => Math.max(a, b), 0);
   return best;
 }
 
@@ -114,7 +114,7 @@ function locationScore(profile: Profile, job: Job): number {
 function workplaceScore(profile: Profile, job: Job): number {
   const prefs = profile.workplacePreferences;
   if (prefs.length === 0) return 70; // flexible
-  if (!job.workplaceType) return 70制止; // unknown workplace — don't penalize
+  if (!job.workplaceType) return 70; // unknown workplace — don't penalize
   return prefs.includes(job.workplaceType) ? 100 : 0;
 }
 

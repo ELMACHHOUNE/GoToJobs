@@ -1074,4 +1074,7 @@ const RAW_JOBS: Array<Omit<Job, "id">> = [
 ];
 
 export const mockJobs = deduplicateJobs(RAW_JOBS.map(normalizeJob));
-</content>
+
+export function getMockJobs(): Job[] {
+  return mockJobs;
+}

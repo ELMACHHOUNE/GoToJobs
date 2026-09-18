@@ -53,7 +53,10 @@ export type Job = {
   publishedAt: string;
   fetchedAt: string;
   url: string;
+  hasRemoteApplications?: boolean;
 };
+
+export type RawJob = Omit<Job, "id">;
 
 export type SortOption = "relevance" | "newest" | "match" | "salary";
 
