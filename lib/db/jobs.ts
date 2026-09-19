@@ -32,6 +32,38 @@ export async function getJobFromDatabase(externalId: string): Promise<Job | null
   return null;
 }
 
+export async function getJobFromDatabaseById(id: string): Promise<Job | null> {
+  try {
+    const dbJob = await JobModel.findById(id).lean();
+    if (dbJob) {
+      return {
+        ...dbJob,
+        id: dbJob._id.toString(),
+        publishedAt: dbJob.publishedAt.toISOString(),
+        fetchedAt: dbJob.fetchedAt.toISOString(),
+      } as Job;
+    }
+  } catch {
+  }
+  return null;
+}
+
+export async function getJobsFromDatabaseByIds(ids: string[]): Promise<Job[]> {
+  if (ids.length === 0) return [];
+  try {
+    const jobs = await JobModel.find({ _id: { $in: ids } }).lean();
+    return jobs.map((job) => ({
+      ...job,
+      id: job._id.toString(),
+      publishedAt: job.publishedAt.toISOString(),
+      fetchedAt: job.fetchedAt.toISOString(),
+    })) as Job[];
+  } catch (error) {
+    console.error("Failed to get jobs from database:", error);
+    return [];
+  }
+}
+
 export async function searchJobsFromDatabase(
   query: any,
   options: { page?: number; pageSize?: number; sort?: any } = {}

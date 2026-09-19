@@ -1,22 +1,22 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getJobById, getRelatedJobs } from "@/lib/jobs/queries";
 import { calculateMatch } from "@/lib/matching/calculateMatch";
-import { defaultProfile } from "@/lib/store/schema";
 
 export async function GET(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
   const { id } = await params;
-  const job = getJobById(id);
+  const job = await getJobById(id);
 
   if (!job) {
     return NextResponse.json({ error: "Job not found" }, { status: 404 });
   }
 
-  const profile = defaultProfile();
+  const profile = null;
   const match = calculateMatch(profile, job);
-  const related = getRelatedJobs(job, 4).map((j) => {
+  const related = await getRelatedJobs(job, 4);
+  const relatedWithMatch = related.map((j) => {
     const m = calculateMatch(profile, j);
     return { job: j, match: m };
   });
@@ -24,6 +24,6 @@ export async function GET(
   return NextResponse.json({
     job,
     match,
-    related,
+    related: relatedWithMatch,
   });
 }

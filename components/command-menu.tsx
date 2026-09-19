@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { Command, CommandInput, CommandList, CommandItem, CommandGroup } from "@/components/ui/command";
+import { Command, CommandInput, CommandList, CommandItem, CommandGroup, CommandDialog } from "@/components/ui/command";
 import { SearchIcon, BriefcaseIcon, BookmarkIcon, ClipboardListIcon, BellIcon, UserIcon, SettingsIcon, SunIcon, MoonIcon } from "lucide-react";
 import { useRouter, usePathname } from "next/navigation";
 import { useStore } from "@/lib/store/store-provider";
@@ -48,7 +48,7 @@ export function CommandMenu() {
   };
 
   return (
-    <Command open={open} onOpenChange={setOpen}>
+    <CommandDialog open={open} onOpenChange={setOpen}>
       <CommandInput placeholder="Type a command or search..." />
       <CommandList>
         <CommandGroup heading="Navigation">
@@ -77,6 +77,6 @@ export function CommandMenu() {
           </CommandItem>
         </CommandGroup>
       </CommandList>
-    </Command>
+    </CommandDialog>
   );
 }

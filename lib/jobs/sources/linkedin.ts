@@ -1,7 +1,7 @@
 import "server-only";
 import { Job, JobSearchParams, JobSource } from "../types";
 import { normalizeJob } from "@/lib/jobs/normalize";
-import { saveJobsToDatabase, getJobFromDatabase } from "@/lib/db/jobs";
+import { saveJobsToDatabase, getJobFromDatabase, getJobFromDatabaseById } from "@/lib/db/jobs";
 
 const LINKEDIN_API_BASE = "https://api.linkedin.com/v2";
 
@@ -385,6 +385,9 @@ export async function getLinkedInJobById(id: string): Promise<Job | null> {
   if (accessToken) {
     return getLinkedInJobByIdViaAPI(accessToken, id);
   }
+
+  const byId = await getJobFromDatabaseById(id);
+  if (byId) return byId;
 
   return getJobFromDatabase(id);
 }

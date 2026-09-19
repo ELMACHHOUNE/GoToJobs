@@ -1,6 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
 import { searchJobs, type JobQueryInput } from "@/lib/jobs/queries";
-import { defaultProfile } from "@/lib/store/schema";
 
 export async function GET(request: NextRequest) {
   const { searchParams } = new URL(request.url);
@@ -14,13 +13,8 @@ export async function GET(request: NextRequest) {
   const sort = (searchParams.get("sort") as JobQueryInput["sort"]) || "relevance";
   const page = parseInt(searchParams.get("page") || "1", 10);
   const pageSize = parseInt(searchParams.get("pageSize") || "12", 10);
-  const source = (searchParams.get("source") as JobQueryInput["source"]) || "mock";
-  const country = searchParams.get("country") || "morocco";
-
-  const profile = defaultProfile();
 
   const result = await searchJobs({
-    profile,
     q,
     locations,
     workplaceTypes,
@@ -31,8 +25,6 @@ export async function GET(request: NextRequest) {
     sort,
     page,
     pageSize,
-    source,
-    country,
   });
 
   return NextResponse.json(result);

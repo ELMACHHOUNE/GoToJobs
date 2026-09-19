@@ -2,7 +2,7 @@ import Link from "next/link";
 import { BriefcaseIcon, BookmarkIcon, ClipboardListIcon, BellIcon, ArrowRightIcon, SparklesIcon, ShieldIcon, ZapIcon, UserIcon } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { getQueryableJobs } from "@/lib/jobs/queries";
+import { getMockJobs } from "@/lib/jobs/mock-export";
 import { calculateMatch } from "@/lib/matching/calculateMatch";
 import { defaultProfile } from "@/lib/store/schema";
 
@@ -119,7 +119,7 @@ function MatchingExplanation() {
 }
 
 function JobPreview() {
-  const jobs = getQueryableJobs().slice(0, 3);
+  const jobs = getMockJobs().slice(0, 3);
   const profile = defaultProfile();
 
   return (

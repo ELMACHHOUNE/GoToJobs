@@ -1,21 +1,11 @@
-import { calculateMatch } from "@/lib/matching/calculateMatch";
-import type { Profile } from "@/lib/store/schema";
-import { normalizeSkill } from "@/lib/matching/normalizeSkill";
-import { getMockJobs } from "@/lib/jobs/mock";
-import { searchLinkedInJobs, getLinkedInJobById } from "@/lib/jobs/sources";
-import { searchJobsFromDatabase, countJobsFromDatabase } from "@/lib/db/jobs";
-import type {
-  DatePostedFilter,
-  EmploymentType,
-  ExperienceLevel,
-  Job,
-  JobSearchParams,
-  SortOption,
-  WorkplaceType,
-} from "@/lib/jobs/types";
-import { MATCH_WEIGHTS } from "@/lib/matching/calculateMatch";
+import "server-only";
 
-export type JobSourceType = "mock" | "linkedin";
+import type { JobSearchParams, Job } from "./types";
+import { normalizeSkill } from "@/lib/matching/normalizeSkill";
+import { calculateMatch, type MatchResult } from "@/lib/matching/calculateMatch";
+import type { Profile } from "@/lib/store/schema";
+import { searchJobsFromDatabase } from "@/lib/db/jobs";
+import { getJobFromDatabaseById, getJobsFromDatabaseByIds } from "@/lib/db/jobs";
 
 export type JobQueryResult = {
   jobs: Job[];
@@ -29,166 +19,103 @@ export type JobQueryInput = {
   profile?: Profile | null;
   q?: string;
   locations?: string[];
-  workplaceTypes?: WorkplaceType[];
-  employmentTypes?: EmploymentType[];
-  experienceLevels?: ExperienceLevel[];
+  workplaceTypes?: string[];
+  employmentTypes?: string[];
+  experienceLevels?: string[];
   skills?: string[];
-  datePosted?: DatePostedFilter;
-  sort?: SortOption;
+  datePosted?: string;
+  sort?: string;
   page?: number;
   pageSize?: number;
-  source?: JobSourceType;
-  country?: string;
 };
 
-/** How fresh a job is (0–1), from publishedAt → now. */
+/** Freshness 0–1: how recently the job was published (decays over 30 days). */
 function freshnessScore(job: Job): number {
-  const now = Date.now();
-  const published = new Date(job.publishedAt).getTime();
-  const ageDays = Math.max(0, (now - published) / 86_400_000);
+  const ageDays =
+    Math.max(0, Date.now() - new Date(job.publishedAt).getTime()) / 86_400_000;
   return Math.max(0, 1 - ageDays / 30);
 }
 
-export function getQueryableJobs(): Job[] {
-  return getMockJobs();
+/** Text relevance 0–1: how many query tokens land in title/skills/company. */
+function relevanceScore(job: Job, tokens: string[]): number {
+  if (tokens.length === 0) return 0;
+  const haystack = [
+    job.title,
+    job.company.name,
+    job.location ?? "",
+    job.skills.join(" "),
+  ]
+    .join(" ")
+    .toLowerCase();
+  let hits = 0;
+  for (const t of tokens) if (haystack.includes(t)) hits += 1;
+  return hits / tokens.length;
 }
 
-async function buildMongoQuery(params: JobSearchParams): Promise<any> {
-  const query: any = { source: "linkedin" };
-  
-  if (params.q) {
-    query.$text = { $search: params.q };
-  }
-  
-  if (params.locations?.length) {
-    query.location = { $in: params.locations.map((l) => new RegExp(l, "i")) };
-  }
-  
-  if (params.workplaceTypes?.length) {
-    query.workplaceType = { $in: params.workplaceTypes };
-  }
-  
-  if (params.employmentTypes?.length) {
-    query.employmentType = { $in: params.employmentTypes };
-  }
-  
-  if (params.experienceLevels?.length) {
-    query.experienceLevel = { $in: params.experienceLevels };
-  }
-  
-  if (params.skills?.length) {
-    query.skills = { $in: params.skills.map((s) => new RegExp(s, "i")) };
-  }
-  
-  if (params.datePosted && params.datePosted !== "any") {
-    const cutoffMs =
-      params.datePosted === "24h"
-        ? 86_400_000
-        : params.datePosted === "3d"
-          ? 3 * 86_400_000
-          : params.datePosted === "week"
-            ? 7 * 86_400_000
-            : 30 * 86_400_000;
-    const cutoffDate = new Date(Date.now() - cutoffMs);
-    query.publishedAt = { $gte: cutoffDate };
-  }
-
-  return query;
+function matchesAny(filter: string[] | undefined, value: string | undefined): boolean {
+  if (!filter || filter.length === 0) return true;
+  if (!value) return false;
+  return filter.some((f) => f.toLowerCase() === value.toLowerCase());
 }
 
-function buildSort(params: JobSearchParams): any {
-  const sort: any = {};
-  if (params.sort === "newest") {
-    sort.publishedAt = -1;
-  } else if (params.sort === "salary") {
-    sort["salary.min"] = -1;
-  } else {
-    sort.publishedAt = -1;
-  }
-  return sort;
-}
-
-async function searchJobsFromMongoDB(params: JobSearchParams, options: { page?: number; pageSize?: number } = {}): Promise<Job[]> {
-  const { page = 1, pageSize = 20 } = options;
-  const query = await buildMongoQuery(params);
-  const sort = buildSort(params);
-  return searchJobsFromDatabase(query, { page, pageSize, sort });
-}
-
-async function countJobsFromMongoDB(params: JobSearchParams): Promise<number> {
-  const query = await buildMongoQuery(params);
-  return countJobsFromDatabase(query);
-}
-
-function matchesValue(list: string[] | undefined, value: string): boolean {
-  if (!list || list.length === 0) return true;
-  return list.some((v) => v.toLowerCase() === value.toLowerCase());
+function hasAllSkills(skills: string[] | undefined, jobSkills: string[]): boolean {
+  if (!skills || skills.length === 0) return true;
+  const want = new Set(skills.map(normalizeSkill));
+  const have = new Set(jobSkills.map(normalizeSkill));
+  return [...want].every((s) => have.has(s));
 }
 
 /**
- * Full job search pipeline used by the explorer page and the API route:
- * fetch → filter → rank → sort → slice. Kept framework-agnostic so
- * it is testable without React.
+ * Pure, synchronous job query pipeline: filter → rank → sort → paginate.
+ * Framework-agnostic — takes a plain in-memory job array, so it can be tested
+ * directly and reused by the DB-backed search below without React or MongoDB.
  */
-export async function searchJobs({
-  profile,
-  q = "",
-  locations,
-  workplaceTypes,
-  employmentTypes,
-  experienceLevels,
-  skills,
-  datePosted = "any",
-  sort = "relevance",
-  page = 1,
-  pageSize = 12,
-  source = "mock",
-  country = "morocco",
-}: JobQueryInput = {}): Promise<JobQueryResult> {
-  let sourceJobs: Job[];
-  let total = 0;
+export function executeJobQuery(
+  sourceJobs: Job[],
+  input: {
+    profile?: Profile | null;
+    q?: string;
+    locations?: string[];
+    workplaceTypes?: string[];
+    employmentTypes?: string[];
+    experienceLevels?: string[];
+    skills?: string[];
+    datePosted?: string;
+    sort?: string;
+    page?: number;
+    pageSize?: number;
+  } = {}
+): JobQueryResult {
+  const {
+    profile = null,
+    q = "",
+    locations,
+    workplaceTypes,
+    employmentTypes,
+    experienceLevels,
+    skills,
+    datePosted = "any",
+    sort = "relevance",
+    page = 1,
+    pageSize = 12,
+  } = input;
 
-  const searchParams = { q, locations, workplaceTypes, employmentTypes, experienceLevels, skills, datePosted, sort };
-
-  if (source === "linkedin") {
-    sourceJobs = await searchJobsFromMongoDB(searchParams, { page, pageSize });
-    total = await countJobsFromMongoDB(searchParams);
-  } else {
-    sourceJobs = getQueryableJobs();
-    total = sourceJobs.length;
-  }
-
-  const term = q.trim().toLowerCase();
-  const termTokens = term.split(/\s+/).filter(Boolean);
+  const tokens = q
+    .trim()
+    .toLowerCase()
+    .split(/\s+/)
+    .filter(Boolean);
 
   const filtered = sourceJobs.filter((job) => {
-    if (locations?.length && !locations.some((l) => job.location?.toLowerCase().includes(l.toLowerCase()))) {
-      return false;
+    if (locations?.length) {
+      const loc = job.location ?? "";
+      if (!locations.some((l) => loc.toLowerCase().includes(l.toLowerCase()))) return false;
     }
-    if (
-      workplaceTypes?.length &&
-      (!job.workplaceType || !workplaceTypes.includes(job.workplaceType))
-    ) {
-      return false;
-    }
-    if (
-      employmentTypes?.length &&
-      !employmentTypes.some((e) => e === job.employmentType)
-    ) {
-      return false;
-    }
-    if (
-      experienceLevels?.length &&
-      !experienceLevels.some((e) => e === job.experienceLevel)
-    ) {
-      return false;
-    }
-    if (skills?.length) {
-      const jobSkills = new Set(job.skills.map(normalizeSkill));
-      const hasAll = skills.every((s) => jobSkills.has(normalizeSkill(s)));
-      if (!hasAll) return false;
-    }
-    if (term) {
+    if (!matchesAny(workplaceTypes, job.workplaceType)) return false;
+    if (!matchesAny(employmentTypes, job.employmentType)) return false;
+    if (!matchesAny(experienceLevels, job.experienceLevel)) return false;
+    if (skills?.length && !hasAllSkills(skills, job.skills)) return false;
+    if (tokens.length) {
       const haystack = [
         job.title,
         job.company.name,
@@ -198,8 +125,7 @@ export async function searchJobs({
       ]
         .join(" ")
         .toLowerCase();
-      const allMatch = termTokens.every((t) => haystack.includes(t));
-      if (!allMatch) return false;
+      if (!tokens.every((t) => haystack.includes(t))) return false;
     }
     if (datePosted !== "any") {
       const cutoffMs =
@@ -210,78 +136,87 @@ export async function searchJobs({
             : datePosted === "week"
               ? 7 * 86_400_000
               : 30 * 86_400_000;
-      const age = Date.now() - new Date(job.publishedAt).getTime();
-      if (age > cutoffMs) return false;
+      if (Date.now() - new Date(job.publishedAt).getTime() > cutoffMs) return false;
     }
     return true;
   });
 
   const ranked = filtered.map((job) => {
-    const match = calculateMatch(profile ?? null, job);
-    const relevance = term
-      ? scoreRelevance(job, termTokens)
-      : match.score / 100;
-    const score = 0.6 * (match.score / 100) + 0.25 * relevance + 0.15 * freshnessScore(job);
-    return { job, match, relevance, score };
+    const match = profile ? calculateMatch(profile, job) : null;
+    const relevance = tokens.length ? relevanceScore(job, tokens) : 0;
+    const rank =
+      0.6 * ((match?.score ?? 0) / 100) +
+      0.25 * relevance +
+      0.15 * freshnessScore(job);
+    return { job, match, rank };
   });
 
   const sorted = [...ranked].sort((a, b) => {
     switch (sort) {
       case "newest":
-        return new Date(b.job.publishedAt).getTime() - new Date(a.job.publishedAt).getTime();
-      case "match":
-        return b.match.score - a.match.score;
-      case "salary": {
-        const ab = a.job.salary?.min ?? 0;
-        const bb = b.job.salary?.min ?? 0;
-        return bb - ab;
-      }
+        return (
+          new Date(b.job.publishedAt).getTime() - new Date(a.job.publishedAt).getTime()
+        );
+      case "salary":
+        return (b.job.salary?.min ?? 0) - (a.job.salary?.min ?? 0);
       default:
-        return b.score - a.score;
+        return b.rank - a.rank;
     }
   });
 
-  const filteredTotal = sorted.length;
-  const totalPages = Math.max(1, Math.ceil(filteredTotal / pageSize));
+  const total = sorted.length;
+  const totalPages = Math.max(1, Math.ceil(total / pageSize));
   const safePage = Math.min(Math.max(1, page), totalPages);
   const start = (safePage - 1) * pageSize;
-  const slice = sorted.slice(start, start + pageSize).map((r) => r.job);
 
-  return { jobs: slice, total: filteredTotal, page: safePage, pageSize, totalPages };
+  return {
+    jobs: sorted.slice(start, start + pageSize).map((r) => r.job),
+    total,
+    page: safePage,
+    pageSize,
+    totalPages,
+  };
 }
 
-/** Lightweight text relevance: how many query tokens land in title/skills/company. */
-function scoreRelevance(job: Job, tokens: string[]): number {
-  if (tokens.length === 0) return 0;
-  const title = job.title.toLowerCase();
-  const skills = job.skills.join(" ").toLowerCase();
-  const company = job.company.name.toLowerCase();
-  let hits = 0;
-  for (const t of tokens) {
-    if (title.includes(t) || skills.includes(t) || company.includes(t)) hits += 1;
-  }
-  return hits / tokens.length;
+/** How many jobs we scan from the database before ranking in memory. */
+const MAX_SCANNED_JOBS = 500;
+
+/** Search jobs in MongoDB, then filter/rank/sort/paginate via executeJobQuery. */
+export async function searchJobs(input: JobQueryInput = {}): Promise<JobQueryResult> {
+  const { page = 1, pageSize = 12 } = input     = input;
+  const recent = await searchJobsFromDatabase(
+    { source: "linkedin" },
+    { page: 1, pageSize: MAX_SCANNED_JOBS, sort: { publishedAt: -1 } }
+  );
+  return executeJobQuery(recent, { profile: input.profile, q: input.q, locations: input.locations, workplaceTypes: input.workplaceTypes, employmentTypes: input.employmentTypes, experienceLevels: input.experienceLevels, skills: input.skills, datePosted: input.datePosted, sort: input.sort, page, pageSize });
 }
 
-export async function getJobById(id: string, source: JobSourceType = "mock"): Promise<Job | undefined> {
-  if (source === "linkedin") {
-    const job = await getLinkedInJobById(id);
-    return job ?? undefined;
-  }
-  return getMockJobs().find((j: Job) => j.id === id);
+export async function getJobById(id: string): Promise<Job | undefined> {
+  const job = await getJobFromDatabaseById(id);
+  return job ?? undefined;
 }
 
 export async function getRelatedJobs(job: Job, limit = 4): Promise<Job[]> {
   if (!job.skills || job.skills.length === 0) return [];
-  const jobs = getMockJobs().filter((j: Job) => j.id !== job.id);
   const want = new Set(job.skills.map(normalizeSkill));
-  return jobs
-    .map((candidate: Job) => {
-      const have = candidate.skills.filter((s: string) => want.has(normalizeSkill(s))).length;
-      return { candidate, have };
-    })
-    .filter((x) => x.have > 0)
-    .sort((a: { candidate: Job; have: number }, b: { candidate: Job; have: number }) => b.have - a.have)
+
+  const recent = await searchJobsFromDatabase(
+    { source: "linkedin" },
+    { page: 1, pageSize: 200, sort: { publishedAt: -1 } }
+  );
+
+  return recent
+    .filter((candidate: Job) => candidate.id !== job.id)
+    .map((candidate: Job) => ({
+      candidate,
+      overlap: candidate.skills.filter((s) => want.has(normalizeSkill(s))).length,
+    }))
+    .filter((x) => x.overlap > 0)
+    .sort((a, b) => b.overlap - a.overlap)
     .slice(0, limit)
-    .map((x: { candidate: Job; have: number }) => x.candidate);
+    .map((x) => x.candidate);
+}
+
+export async function getJobsByIds(ids: string[]): Promise<Job[]> {
+  return getJobsFromDatabaseByIds(ids);
 }

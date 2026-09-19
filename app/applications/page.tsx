@@ -10,9 +10,15 @@ import { JobCard } from "@/components/job-card";
 import { EmptyState } from "@/components/empty-state";
 import { calculateMatch } from "@/lib/matching/calculateMatch";
 import { defaultProfile } from "@/lib/store/schema";
-import { getQueryableJobs } from "@/lib/jobs/queries";
+import { getMockJobs } from "@/lib/jobs/mock-export";
 import { useStore } from "@/lib/store/store-provider";
-import type { ApplicationStatus } from "@/lib/store/schema";
+import type { ApplicationStatus, JobApplication } from "@/lib/store/schema";
+import type { Job } from "@/lib/jobs/types";
+
+interface ApplicationWithJob extends JobApplication {
+  job: Job;
+  match: { score: number; matchedSkills: string[]; missingSkills: string[]; reasons: string[] };
+}
 
 const STATUS_ORDER: ApplicationStatus[] = ["saved", "applied", "interview", "offer", "rejected", "withdrawn"];
 const STATUS_LABELS: Record<ApplicationStatus, string> = {
@@ -36,9 +42,9 @@ export default function () {
   const { applications, profile, getApplication, setApplicationStatus, removeApplication } = useStore();
   const [mobileColumn, setMobileColumn] = useState<ApplicationStatus>("saved");
 
-  const allJobs = useMemo(() => getQueryableJobs(), []);
+  const allJobs = useMemo(() => getMockJobs(), []);
   const appsByStatus = useMemo(() => {
-    const map: Record<ApplicationStatus, typeof applications> = {
+    const map: Record<ApplicationStatus, ApplicationWithJob[]> = {
       saved: [],
       applied: [],
       interview: [],

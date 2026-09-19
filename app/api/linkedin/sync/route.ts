@@ -1,6 +1,6 @@
 import { auth } from "@/lib/auth/config";
 import { searchLinkedInJobs, getUserSavedJobs } from "@/lib/jobs/sources/linkedin";
-import { JobModel } from "@/lib/models";
+import { saveJobsToDatabase } from "@/lib/db/jobs";
 import { NextResponse } from "next/server";
 
 export async function POST(request: Request) {
@@ -22,16 +22,8 @@ export async function POST(request: Request) {
 
     let savedCount = 0;
     if (saveJobs && result.jobs.length > 0) {
-      for (const job of result.jobs) {
-        const existing = await JobModel.findOne({
-          source: "linkedin",
-          externalId: job.externalId,
-        });
-        if (!existing) {
-          await JobModel.create(job);
-          savedCount++;
-        }
-      }
+      await saveJobsToDatabase(result.jobs);
+      savedCount = result.jobs.length;
     }
 
     const savedJobs = await getUserSavedJobs(session.accessToken as string);

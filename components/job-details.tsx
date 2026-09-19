@@ -48,7 +48,7 @@ function MatchBreakdown({ match, job }: { match: MatchResult; job: Job }) {
       </CardHeader>
       <CardContent className="space-y-6">
         <div className="space-y-3">
-          {[
+          {match.breakdown && [
             { label: "Skills", value: match.breakdown.skills, color: "bg-blue-500" },
             { label: "Role", value: match.breakdown.title, color: "bg-purple-500" },
             { label: "Experience", value: match.breakdown.experience, color: "bg-green-500" },
@@ -76,7 +76,7 @@ function MatchBreakdown({ match, job }: { match: MatchResult; job: Job }) {
               Matched skills ({match.matchedSkills.length})
             </h4>
             <div className="flex flex-wrap gap-1">
-              {match.matchedSkills.map((skill) => (
+              {match.matchedSkills.map((skill: string) => (
                 <Badge key={skill} variant="default" className="bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-300">
                   {skill}
                 </Badge>
@@ -94,7 +94,7 @@ function MatchBreakdown({ match, job }: { match: MatchResult; job: Job }) {
               Missing skills ({match.missingSkills.length})
             </h4>
             <div className="flex flex-wrap gap-1">
-              {match.missingSkills.map((skill) => (
+              {match.missingSkills.map((skill: string) => (
                 <Badge key={skill} variant="outline" className="border-amber-200 text-amber-700 dark:border-amber-800 dark:text-amber-300">
                   {skill}
                 </Badge>
@@ -107,7 +107,7 @@ function MatchBreakdown({ match, job }: { match: MatchResult; job: Job }) {
           <div className="space-y-2">
             <h4 className="font-medium">Why this match</h4>
             <ul className="space-y-1 text-sm text-muted-foreground">
-              {match.reasons.map((reason, i) => (
+              {match.reasons.map((reason: string, i: number) => (
                 <li key={i} className="flex items-start gap-2">
                   <span className="mt-1 h-1.5 w-1.5 rounded-full bg-muted-foreground/50" />
                   {reason}
@@ -266,7 +266,9 @@ export function JobDetails({ job, match, related }: JobDetailsProps) {
                       ? `${job.salary.min.toLocaleString()}–${job.salary.max.toLocaleString()} ${job.salary.currency || "MAD"}/yr`
                       : job.salary.min
                       ? `From ${job.salary.min.toLocaleString()} ${job.salary.currency || "MAD"}/yr`
-                      : `Up to ${job.salary.max.toLocaleString()} ${job.salary.currency || "MAD"}/yr`}
+                      : job.salary.max
+                      ? `Up to ${job.salary.max.toLocaleString()} ${job.salary.currency || "MAD"}/yr`
+                      : ""}
                   </p>
                 </div>
               )}

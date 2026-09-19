@@ -3,8 +3,7 @@ export type JobSource =
   | "greenhouse"
   | "lever"
   | "remotive"
-  | "company"
-  | "mock";
+  | "company";
 
 export type WorkplaceType = "remote" | "hybrid" | "onsite";
 
@@ -65,6 +64,21 @@ export type DatePostedFilter =
   | "3d"
   | "week"
   | "month";
+
+export type MatchResult = {
+  score: number;
+  matchedSkills: string[];
+  missingSkills: string[];
+  reasons: string[];
+  needsProfile: boolean;
+  breakdown?: {
+    skills: number;
+    title: number;
+    experience: number;
+    location: number;
+    workplace: number;
+  };
+};
 
 export type JobSearchParams = {
   q?: string;

@@ -11,22 +11,24 @@ import { JobCard } from "@/components/job-card";
 import { EmptyState } from "@/components/empty-state";
 import { calculateMatch } from "@/lib/matching/calculateMatch";
 import { defaultProfile } from "@/lib/store/schema";
-import { getQueryableJobs } from "@/lib/jobs/queries";
+import { getMockJobs } from "@/lib/jobs/mock-export";
 import { useStore } from "@/lib/store/store-provider";
+
+type FilterValue = "all" | "remote" | "high-match" | "recent";
 
 const FILTER_OPTIONS = [
   { value: "all", label: "All" },
   { value: "remote", label: "Remote" },
   { value: "high-match", label: "High match (80%+)" },
   { value: "recent", label: "Recently saved" },
-] as const;
+] as const satisfies { value: FilterValue; label: string }[];
 
 export default function () {
   const { savedJobs, profile, isSaved, toggleSave, removeApplication } = useStore();
-  const [filter, setFilter] = useState<typeof FILTER_OPTIONS[0]["value"]>("all");
+  const [filter, setFilter] = useState<FilterValue>("all");
 
   const jobs = useMemo(() => {
-    const allJobs = getQueryableJobs();
+    const allJobs = getMockJobs();
     return savedJobs
       .map((s) => allJobs.find((j) => j.id === s.jobId))
       .filter((j): j is NonNullable<typeof j> => !!j)
@@ -42,7 +44,7 @@ export default function () {
         return true;
       })
       .sort((a, b) => {
-        if (filter === "recent") return new Date(b.savedAt).getTime() - new Date(a.savedAt).getTime();
+        if (filter === "recent") return new Date(b.savedAt ?? "").getTime() - new Date(a.savedAt ?? "").getTime();
         return b.match.score - a.match.score;
       });
   }, [savedJobs, profile, filter]);
@@ -69,7 +71,7 @@ export default function () {
         <h1 className="text-2xl font-bold">Saved Jobs</h1>
         <div className="flex items-center gap-2">
           <FilterIcon className="h-4 w-4 text-muted-foreground" />
-          <Select value={filter} onValueChange={setFilter}>
+          <Select value={filter} onValueChange={(v) => setFilter(v as FilterValue)}>
             <SelectTrigger className="w-[200px]">
               <SelectValue />
             </SelectTrigger>

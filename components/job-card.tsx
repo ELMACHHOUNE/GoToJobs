@@ -98,7 +98,9 @@ export function JobCard({ job, matchScore, matchedSkills, missingSkills, reasons
               ? `${job.salary.min.toLocaleString()}–${job.salary.max.toLocaleString()} ${job.salary.currency || "MAD"}/yr`
               : job.salary.min
               ? `From ${job.salary.min.toLocaleString()} ${job.salary.currency || "MAD"}/yr`
-              : `Up to ${job.salary.max.toLocaleString()} ${job.salary.currency || "MAD"}/yr`}
+              : job.salary.max
+              ? `Up to ${job.salary.max.toLocaleString()} ${job.salary.currency || "MAD"}/yr`
+              : ""}
           </div>
         )}
 

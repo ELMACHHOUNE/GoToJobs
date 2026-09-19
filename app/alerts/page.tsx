@@ -55,7 +55,7 @@ export default function () {
     if (editing) {
       updateAlert(editing.id, { ...form, keywords, updatedAt: new Date().toISOString() });
     } else {
-      createAlert({ ...form, keywords, id: "", createdAt: "", updatedAt: "" });
+      createAlert({ ...form, keywords });
     }
     resetForm();
     setOpen(false);

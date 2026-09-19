@@ -1,7 +1,6 @@
 import { Metadata } from "next";
 import { JobsExplorerClient } from "@/components/jobs-explorer-client";
-import { searchJobs, type JobQueryInput } from "@/lib/jobs/queries";
-import { defaultProfile } from "@/lib/store/schema";
+import { searchJobs } from "@/lib/jobs/queries";
 
 export const metadata: Metadata = {
   title: "Jobs",
@@ -20,8 +19,6 @@ interface JobsPageProps {
     sort?: string;
     page?: string;
     pageSize?: string;
-    source?: string;
-    country?: string;
   }>;
 }
 
@@ -36,14 +33,8 @@ export default async function JobsPage({ searchParams }: JobsPageProps) {
   const datePosted = params.datePosted || "any";
   const sort = params.sort || "relevance";
   const page = parseInt(params.page || "1", 10);
-  const pageSize = parseInt(params.pageSize || "12", 10);
-  const source = (params.source as "mock" | "linkedin") || "mock";
-  const country = params.country || "morocco";
-
-  const profile = defaultProfile();
 
   const result = await searchJobs({
-    profile,
     q,
     locations,
     workplaceTypes: workplaceTypes as any,
@@ -54,9 +45,7 @@ export default async function JobsPage({ searchParams }: JobsPageProps) {
     sort: sort as any,
     page,
     pageSize: 12,
-    source,
-    country,
   });
 
-  return <JobsExplorerClient initialData={result} searchParams={params} />;
+  return <JobsExplorerClient initialData={result} />;
 }

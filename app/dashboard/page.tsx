@@ -10,13 +10,13 @@ import { JobCard } from "@/components/job-card";
 import { EmptyState } from "@/components/empty-state";
 import { calculateMatch } from "@/lib/matching/calculateMatch";
 import { defaultProfile } from "@/lib/store/schema";
-import { getQueryableJobs } from "@/lib/jobs/queries";
+import { getMockJobs } from "@/lib/jobs/mock-export";
 import { useStore } from "@/lib/store/store-provider";
 import Link from "next/link";
 
 export default function () {
   const { profile, savedJobs, applications, alerts } = useStore();
-  const allJobs = getQueryableJobs();
+  const allJobs = getMockJobs();
   const profileForMatch = defaultProfile();
 
   const stats = useMemo(() => {

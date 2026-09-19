@@ -475,12 +475,12 @@ function ProfileForm({
                   key={type}
                   variant={workplacePreferences.includes(type) ? "default" : "outline"}
                   size="sm"
-                  onClick={() => {
-                    const updated = workplacePreferences.includes(type)
-                      ? workplacePreferences.filter((p) => p !== type)
-                      : [...workplacePreferences, type];
-                    setForm((prev) => ({ ...prev, workplacePreferences: updated }));
-                  }}
+onClick={() => {
+                      const updated = workplacePreferences.includes(type)
+                        ? workplacePreferences.filter((p) => p !== type)
+                        : [...workplacePreferences, type];
+                      setForm((prev) => ({ ...prev, workplacePreferences: updated as ("remote" | "hybrid" | "onsite")[] }));
+                    }}
                 >
                   {type.charAt(0).toUpperCase() + type.slice(1)}
                 </Button>

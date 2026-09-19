@@ -11,7 +11,7 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
       clientSecret: process.env.LINKEDIN_CLIENT_SECRET,
       authorization: {
         params: {
-          scope: "openid profile email r_liteprofile r_emailaddress r_organization_social",
+          scope: "openid profile email",
         },
       },
     }),

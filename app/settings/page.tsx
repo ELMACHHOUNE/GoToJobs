@@ -12,7 +12,7 @@ import { cn } from "@/lib/utils";
 
 export default function () {
   const { theme, setTheme, resolvedTheme } = useTheme();
-  const { clearAll, load, persist } = useStore();
+  const { clearAll, load, persist, profile, savedJobs, applications, alerts } = useStore();
 
   return (
     <div className="container mx-auto px-4 py-8 max-w-3xl space-y-6">
@@ -112,7 +112,7 @@ export default function () {
               <p className="text-sm text-muted-foreground">Download your profile, saved jobs, and applications as JSON.</p>
             </div>
             <Button variant="outline" onClick={() => {
-              const { clearAll, load, persist, ...store } = useStore.getState();
+              const store = { profile, savedJobs, applications, alerts };
               const blob = new Blob([JSON.stringify(store, null, 2)], { type: "application/json" });
               const url = URL.createObjectURL(blob);
               const a = document.createElement("a");

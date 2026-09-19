@@ -4,7 +4,7 @@ import { useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useSession, signOut } from "next-auth/react";
-import { BriefcaseIcon, BookmarkIcon, ClipboardListIcon, BellIcon, UserIcon, SettingsIcon, MenuIcon, XIcon, SunIcon, MoonIcon, LogOut, Link } from "lucide-react";
+import { BriefcaseIcon, BookmarkIcon, ClipboardListIcon, BellIcon, UserIcon, SettingsIcon, MenuIcon, XIcon, SunIcon, MoonIcon, LogOut, Link as LinkIcon } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import { useTheme } from "@/components/theme-provider";
@@ -80,8 +80,8 @@ export function Navbar() {
             </div>
           ) : (
             <Link href="/auth/signin">
-              <Button variant="default" className="gap-2" asChild>
-                <Link className="h-5 w-5" />
+              <Button variant="default" className="gap-2">
+                <LinkIcon className="h-5 w-5" />
                 <span>Sign in with LinkedIn</span>
               </Button>
             </Link>
@@ -144,7 +144,7 @@ export function Navbar() {
                 ) : (
                   <Link href="/auth/signin">
                     <Button variant="default" className="w-full justify-start gap-2">
-                      <Link className="h-5 w-5" />
+<LinkIcon className="h-5 w-5" />
                       Sign in with LinkedIn
                     </Button>
                   </Link>
