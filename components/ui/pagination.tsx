@@ -11,7 +11,7 @@ interface PaginationProps {
   showFirstLast?: boolean
 }
 
-function Pagination({ className, currentPage, totalPages, onPageChange, showFirstLast = false }: PaginationProps) {
+function Pagination({ className, currentPage, totalPages, onPageChange }: PaginationProps) {
   const pages = React.useMemo(() => {
     const pages: (number | string)[] = [];
     

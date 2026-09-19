@@ -1,12 +1,11 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
-import { KanbanIcon, PlusIcon, Trash2Icon, MoreHorizontalIcon } from "lucide-react";
+import { PlusIcon, MoreHorizontalIcon } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
-import { JobCard } from "@/components/job-card";
 import { EmptyState } from "@/components/empty-state";
 import { calculateMatch } from "@/lib/matching/calculateMatch";
 import { useStore } from "@/lib/store/store-provider";
@@ -36,15 +35,13 @@ const STATUS_COLORS: Record<ApplicationStatus, string> = {
   withdrawn: "bg-amber-100 text-amber-800 dark:bg-amber-900/30 dark:text-amber-300",
 };
 
-export default function () {
-  const { applications, profile, getApplication, setApplicationStatus, removeApplication } = useStore();
-  const [mobileColumn, setMobileColumn] = useState<ApplicationStatus>("saved");
+export default function ApplicationsPage() {
+  const { applications, profile, setApplicationStatus, removeApplication } = useStore();
   const [appJobs, setAppJobs] = useState<Job[]>([]);
 
   useEffect(() => {
     const ids = applications.map((a) => a.jobId);
     if (ids.length === 0) {
-      setAppJobs([]);
       return;
     }
     let cancelled = false;

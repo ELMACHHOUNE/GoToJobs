@@ -37,12 +37,12 @@ export default async function JobsPage({ searchParams }: JobsPageProps) {
   const result = await searchJobs({
     q,
     locations,
-    workplaceTypes: workplaceTypes as any,
-    employmentTypes: employmentTypes as any,
-    experienceLevels: experienceLevels as any,
+    workplaceTypes,
+    employmentTypes,
+    experienceLevels,
     skills,
-    datePosted: datePosted as any,
-    sort: sort as any,
+    datePosted,
+    sort,
     page,
     pageSize: 12,
   });

@@ -2,6 +2,7 @@
 
 import { useState, useMemo, useCallback } from "react";
 import { useSession } from "next-auth/react";
+import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { JobCard } from "@/components/job-card";
@@ -12,8 +13,6 @@ import { calculateMatch } from "@/lib/matching/calculateMatch";
 import { useStore } from "@/lib/store/store-provider";
 import { Loader2, RefreshCw } from "lucide-react";
 import type { Job } from "@/lib/jobs/types";
-
-const PAGE_SIZE = 12;
 
 interface JobsExplorerClientProps {
   initialData: {
@@ -177,7 +176,7 @@ export function JobsExplorerClient({ initialData }: JobsExplorerClientProps) {
               action={session ? <Button onClick={handleSync} disabled={syncing} className="gap-1.5">
                 <RefreshCw className="h-4 w-4" />
                 {syncing ? "Syncing..." : "Sync LinkedIn"}
-              </Button> : <Button onClick={() => (window.location.href = "/auth/signin")}>Sign in to sync</Button>}
+              </Button> : <Button asChild><Link href="/auth/signin">Sign in to sync</Link></Button>}
             />
           ) : (
             <>

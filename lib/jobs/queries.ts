@@ -1,8 +1,8 @@
 import "server-only";
 
-import type { JobSearchParams, Job } from "./types";
+import type { Job } from "./types";
 import { normalizeSkill } from "@/lib/matching/normalizeSkill";
-import { calculateMatch, type MatchResult } from "@/lib/matching/calculateMatch";
+import { calculateMatch } from "@/lib/matching/calculateMatch";
 import type { Profile } from "@/lib/store/schema";
 import { searchJobsFromDatabase } from "@/lib/db/jobs";
 import { getJobFromDatabaseById, getJobsFromDatabaseByIds } from "@/lib/db/jobs";

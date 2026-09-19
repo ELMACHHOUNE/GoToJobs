@@ -2,8 +2,6 @@ import Link from "next/link";
 import {
   BriefcaseIcon,
   BookmarkIcon,
-  ClipboardListIcon,
-  BellIcon,
   ArrowRightIcon,
   SparklesIcon,
   ShieldIcon,
@@ -18,7 +16,6 @@ import { Button } from "@/components/ui/button";
 import {
   Card,
   CardContent,
-  CardDescription,
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
@@ -218,7 +215,7 @@ function HowItWorks() {
           <p className="mx-auto max-w-2xl text-muted-foreground">Four steps to your next opportunity</p>
         </div>
         <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4">
-          {steps.map((step, i) => (
+          {steps.map((step) => (
             <Card key={step.title} className="relative">
               <CardHeader>
                 <div className="mb-2 flex h-8 w-8 items-center justify-center rounded-lg bg-primary/10">

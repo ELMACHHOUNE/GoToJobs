@@ -2,6 +2,9 @@ import "server-only";
 import { JobModel } from "@/lib/models";
 import type { Job } from "@/lib/jobs/types";
 
+type JobQueryFilter = Record<string, unknown>;
+type JobQuerySort = Record<string, 1 | -1>;
+
 export async function saveJobsToDatabase(jobs: Job[]): Promise<void> {
   try {
     for (const job of jobs) {
@@ -65,8 +68,8 @@ export async function getJobsFromDatabaseByIds(ids: string[]): Promise<Job[]> {
 }
 
 export async function searchJobsFromDatabase(
-  query: any,
-  options: { page?: number; pageSize?: number; sort?: any } = {}
+  query: JobQueryFilter,
+  options: { page?: number; pageSize?: number; sort?: JobQuerySort } = {}
 ): Promise<Job[]> {
   const { page = 1, pageSize = 20, sort = { publishedAt: -1 } } = options;
   
@@ -89,7 +92,7 @@ export async function searchJobsFromDatabase(
   }
 }
 
-export async function countJobsFromDatabase(query: any): Promise<number> {
+export async function countJobsFromDatabase(query: JobQueryFilter): Promise<number> {
   try {
     return await JobModel.countDocuments(query);
   } catch (error) {

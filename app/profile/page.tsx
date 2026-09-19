@@ -1,20 +1,13 @@
 "use client";
 
 import { useState, useMemo } from "react";
-import { GraduationCapIcon, BriefcaseIcon, MapPinIcon, SettingsIcon, PlusIcon, Trash2Icon, XIcon } from "lucide-react";
+import { XIcon } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
 import { Progress } from "@/components/ui/progress";
 import { Separator } from "@/components/ui/separator";
 import { cn } from "@/lib/utils";
@@ -22,16 +15,14 @@ import { useStore } from "@/lib/store/store-provider";
 import { WORKPLACE_TYPES } from "@/lib/store/schema";
 import type { Profile } from "@/lib/store/schema";
 
-const EXPERIENCE_LEVELS = ["entry", "junior", "mid-level", "senior", "lead"] as const;
-
-export default function () {
+export default function ProfilePage() {
   const { profile, updateProfile, resetProfile } = useStore();
   const [editing, setEditing] = useState(false);
   const [form, setForm] = useState<Partial<Profile>>({});
   const [skillsInput, setSkillsInput] = useState("");
   const [preferredRolesInput, setPreferredRolesInput] = useState("");
   const [preferredLocationsInput, setPreferredLocationsInput] = useState("");
-  const [education, setEducation] = useState<Profile["education"]>([]);
+  const [education] = useState<Profile["education"]>([]);
   const [editingEduIndex, setEditingEduIndex] = useState<number | null>(null);
   const [eduForm, setEduForm] = useState({ degree: "", fieldOfStudy: "", institution: "", startYear: "", endYear: "" });
 
@@ -120,7 +111,6 @@ export default function () {
   const preferredRoles = form.preferredRoles ?? profile.preferredRoles;
   const preferredLocations = form.preferredLocations ?? profile.preferredLocations;
   const workplacePreferences = form.workplacePreferences ?? profile.workplacePreferences;
-  const yearsOfExperience = form.yearsOfExperience ?? profile.yearsOfExperience;
   const educationList = form.education ?? profile.education;
 
   return (
@@ -161,7 +151,6 @@ export default function () {
           setPreferredLocation={addPreferredLocation}
           removePreferredLocation={removePreferredLocation}
           workplacePreferences={workplacePreferences}
-          yearsOfExperience={yearsOfExperience}
           education={educationList}
           skillsInput={skillsInput}
           setSkillsInput={setSkillsInput}
@@ -172,7 +161,6 @@ export default function () {
           handleInputChange={handleInputChange}
           handleSave={handleSave}
           setEditing={setEditing}
-          setEducation={setEducation}
           editingEduIndex={editingEduIndex}
           setEditingEduIndex={setEditingEduIndex}
           eduForm={eduForm}
@@ -322,7 +310,6 @@ function ProfileForm({
   setPreferredLocation,
   removePreferredLocation,
   workplacePreferences,
-  yearsOfExperience,
   education,
   skillsInput,
   setSkillsInput,
@@ -333,8 +320,6 @@ function ProfileForm({
   handleInputChange,
   handleSave,
   setEditing,
-  education: educationList,
-  setEducation,
   editingEduIndex,
   setEditingEduIndex,
   eduForm,
@@ -356,7 +341,6 @@ function ProfileForm({
   setPreferredLocation: (loc: string) => void;
   removePreferredLocation: (loc: string) => void;
   workplacePreferences: string[];
-  yearsOfExperience: number;
   education: Profile["education"];
   skillsInput: string;
   setSkillsInput: React.Dispatch<React.SetStateAction<string>>;
@@ -367,7 +351,6 @@ function ProfileForm({
   handleInputChange: (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => void;
   handleSave: () => void;
   setEditing: React.Dispatch<React.SetStateAction<boolean>>;
-  setEducation: React.Dispatch<React.SetStateAction<Profile["education"]>>;
   editingEduIndex: number | null;
   setEditingEduIndex: React.Dispatch<React.SetStateAction<number | null>>;
   eduForm: { degree: string; fieldOfStudy: string; institution: string; startYear: string; endYear: string };

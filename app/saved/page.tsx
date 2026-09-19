@@ -1,11 +1,8 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
-import { FilterIcon, XIcon, Trash2Icon } from "lucide-react";
+import { FilterIcon } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { JobCard } from "@/components/job-card";
 import { EmptyState } from "@/components/empty-state";
@@ -22,15 +19,14 @@ const FILTER_OPTIONS = [
   { value: "recent", label: "Recently saved" },
 ] as const satisfies { value: FilterValue; label: string }[];
 
-export default function () {
-  const { savedJobs, profile, isSaved, toggleSave, removeApplication } = useStore();
+export default function SavedJobsPage() {
+  const { savedJobs, profile } = useStore();
   const [filter, setFilter] = useState<FilterValue>("all");
   const [savedJobDetails, setSavedJobDetails] = useState<Job[]>([]);
 
   useEffect(() => {
     const ids = savedJobs.map((s) => s.jobId);
     if (ids.length === 0) {
-      setSavedJobDetails([]);
       return;
     }
     let cancelled = false;

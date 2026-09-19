@@ -13,9 +13,6 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import {
-  Checkbox,
-} from "@/components/ui/checkbox";
-import {
   Sheet,
   SheetContent,
   SheetHeader,
@@ -25,14 +22,12 @@ import {
 import { Separator } from "@/components/ui/separator";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Badge } from "@/components/ui/badge";
-import { cn } from "@/lib/utils";
 import { WORKPLACE_TYPES } from "@/lib/store/schema";
-import type { WorkplaceType, EmploymentType, ExperienceLevel, DatePostedFilter, SortOption } from "@/lib/jobs/types";
+import type { EmploymentType, ExperienceLevel, DatePostedFilter, SortOption } from "@/lib/jobs/types";
 
 const EMPLOYMENT_TYPES: EmploymentType[] = ["full-time", "part-time", "contract", "internship", "freelance"];
 const EXPERIENCE_LEVELS: ExperienceLevel[] = ["entry", "junior", "mid-level", "senior", "lead"];
 const DATE_POSTED_FILTERS: DatePostedFilter[] = ["any", "24h", "3d", "week", "month"];
-const SORT_OPTIONS: SortOption[] = ["relevance", "newest", "match", "salary"];
 
 const COMMON_SKILLS = [
   "react", "next.js", "node.js", "typescript", "javascript", "python", "java", "go",
@@ -144,7 +139,6 @@ export function JobFilters() {
               router={router}
               pathname={pathname}
               localSkills={localSkills}
-              setLocalSkills={setLocalSkills}
               skillInput={skillInput}
               setSkillInput={setSkillInput}
               handleSkillAdd={handleSkillAdd}
@@ -162,7 +156,6 @@ export function JobFilters() {
           router={router}
           pathname={pathname}
           localSkills={localSkills}
-          setLocalSkills={setLocalSkills}
           skillInput={skillInput}
           setSkillInput={setSkillInput}
           handleSkillAdd={handleSkillAdd}
@@ -180,7 +173,6 @@ function FiltersContent({
   router,
   pathname,
   localSkills,
-  setLocalSkills,
   skillInput,
   setSkillInput,
   handleSkillAdd,
@@ -192,7 +184,6 @@ function FiltersContent({
   router: ReturnType<typeof useRouter>;
   pathname: string;
   localSkills: string[];
-  setLocalSkills: React.Dispatch<React.SetStateAction<string[]>>;
   skillInput: string;
   setSkillInput: React.Dispatch<React.SetStateAction<string>>;
   handleSkillAdd: (skill: string) => void;

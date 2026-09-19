@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import Link from "next/link";
+import Image from "next/image";
 import { usePathname } from "next/navigation";
 import { useSession, signOut } from "next-auth/react";
 import { BriefcaseIcon, BookmarkIcon, ClipboardListIcon, BellIcon, UserIcon, SettingsIcon, MenuIcon, XIcon, SunIcon, MoonIcon, LogOut, Link as LinkIcon } from "lucide-react";
@@ -22,7 +23,7 @@ const NAV_ITEMS = [
 export function Navbar() {
   const [mobileOpen, setMobileOpen] = useState(false);
   const pathname = usePathname();
-  const { theme, setTheme, resolvedTheme } = useTheme();
+  const { setTheme, resolvedTheme } = useTheme();
   const { data: session, status } = useSession();
 
   return (
@@ -70,7 +71,13 @@ export function Navbar() {
             <div className="flex items-center gap-2">
               <Link href="/profile" className="flex items-center gap-2 px-3 py-2 text-sm font-medium hover:bg-accent rounded-md">
                 {session.user?.image && (
-                  <img src={session.user.image} alt="" className="h-8 w-8 rounded-full" />
+                  <Image
+                    src={session.user.image}
+                    alt=""
+                    width={32}
+                    height={32}
+                    className="h-8 w-8 rounded-full"
+                  />
                 )}
                 <span className="hidden sm:block">{session.user?.name || "Profile"}</span>
               </Link>

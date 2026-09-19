@@ -5,7 +5,7 @@ import { useSearchParams } from "next/navigation";
 import { signIn } from "next-auth/react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
-import { Link as LinkIcon, Loader2 } from "lucide-react";
+import { Link as LinkIcon } from "lucide-react";
 
 function SignInContent() {
   const searchParams = useSearchParams();

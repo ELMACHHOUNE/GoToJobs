@@ -4,9 +4,7 @@ import {
   createContext,
   useCallback,
   useContext,
-  useEffect,
   useMemo,
-  useRef,
   useState,
   type ReactNode,
 } from "react";
@@ -17,13 +15,10 @@ import {
   type AppState,
   type Profile,
   type ApplicationStatus,
-  type JobApplication,
   type JobAlert,
 } from "@/lib/store/schema";
 
 const STORAGE_KEY = "gotojobs.store.v1";
-
-type PersistResult = { ok: true } | { ok: false; reason: string };
 
 type StoreContextValue = {
   appState: AppState;
@@ -83,11 +78,7 @@ function getInitialHydrated(): boolean {
 
 export function StoreProvider({ children }: { children: ReactNode }) {
   const [appState, setAppState] = useState<AppState>(getInitialAppState);
-  const [hydrated, setHydrated] = useState<boolean>(getInitialHydrated);
-
-  const patchAppState = useCallback((patch: Partial<AppState>) => {
-    setAppState((prev) => ({ ...prev, ...patch }));
-  }, []);
+  const [hydrated] = useState<boolean>(getInitialHydrated);
 
   const persist = useCallback((): { ok: true } | { ok: false; reason: string } => {
     const result = appStateSchema.safeParse(appState);

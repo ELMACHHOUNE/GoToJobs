@@ -5,19 +5,6 @@ import { saveJobsToDatabase, getJobFromDatabase, getJobFromDatabaseById } from "
 
 const LINKEDIN_API_BASE = "https://api.linkedin.com/v2";
 
-interface LinkedInJobSearchParams {
-  keywords?: string;
-  location?: string;
-  distance?: number;
-  jobType?: string[];
-  experienceLevel?: string[];
-  workType?: string[];
-  datePosted?: string;
-  sortBy?: string;
-  start?: number;
-  count?: number;
-}
-
 interface LinkedInJob {
   id: string;
   title: string;
@@ -144,13 +131,12 @@ export async function searchLinkedInJobsViaAPI(
   params: JobSearchParams = {},
   options: { country?: string; page?: number; resultsPerPage?: number } = {}
 ): Promise<{ jobs: Job[]; total: number; page: number; pageSize: number; totalPages: number }> {
-  const { country = "morocco", page = 1, resultsPerPage = 20 } = options;
+  const { page = 1, resultsPerPage = 20 } = options;
 
   const searchParams = new URLSearchParams({
     start: String((page - 1) * resultsPerPage),
     count: String(resultsPerPage),
   });
-
   if (params.q) searchParams.set("keywords", params.q);
   if (params.locations?.length) searchParams.set("location", params.locations.join(", "));
   if (params.workplaceTypes?.includes("remote")) searchParams.set("workType", "REMOTE");
@@ -258,7 +244,7 @@ async function searchLinkedInJobsViaScraping(
 
     const jobs = await pageInstance.evaluate(() => {
       const jobCards = document.querySelectorAll("[data-job-id], .job-search-card, .jobs-search-results__list-item");
-      const results: any[] = [];
+      const results: Array<{ id: string; title: string; company: string; location: string; url: string; postedAt: string }> = [];
 
       jobCards.forEach((card) => {
         try {
@@ -392,7 +378,7 @@ export async function getLinkedInJobById(id: string): Promise<Job | null> {
   return getJobFromDatabase(id);
 }
 
-export async function getUserLinkedInProfile(accessToken: string): Promise<any> {
+export async function getUserLinkedInProfile(accessToken: string): Promise<Record<string, unknown> | null> {
   try {
     const response = await fetch(`${LINKEDIN_API_BASE}/me`, {
       headers: {

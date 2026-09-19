@@ -2,6 +2,7 @@ import { auth } from "@/lib/auth/config";
 import { searchLinkedInJobs, getUserSavedJobs } from "@/lib/jobs/sources/linkedin";
 import { saveJobsToDatabase } from "@/lib/db/jobs";
 import { NextResponse } from "next/server";
+import type { JobSearchParams } from "@/lib/jobs/types";
 
 export async function POST(request: Request) {
   const session = await auth();
@@ -14,7 +15,7 @@ export async function POST(request: Request) {
     const body = await request.json().catch(() => ({}));
     const { keywords, location, saveJobs = true } = body;
 
-    const searchParams: any = {};
+    const searchParams: JobSearchParams = {};
     if (keywords) searchParams.q = keywords;
     if (location) searchParams.locations = [location];
 
@@ -54,7 +55,7 @@ export async function GET(request: Request) {
     const page = parseInt(searchParams.get("page") || "1", 10);
     const pageSize = parseInt(searchParams.get("pageSize") || "20", 10);
 
-    const searchParamsObj: any = {};
+    const searchParamsObj: JobSearchParams = {};
     if (q) searchParamsObj.q = q;
     if (location) searchParamsObj.locations = [location];
 

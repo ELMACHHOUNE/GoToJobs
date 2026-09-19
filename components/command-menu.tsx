@@ -1,10 +1,9 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { Command, CommandInput, CommandList, CommandItem, CommandGroup, CommandDialog } from "@/components/ui/command";
-import { SearchIcon, BriefcaseIcon, BookmarkIcon, ClipboardListIcon, BellIcon, UserIcon, SettingsIcon, SunIcon, MoonIcon } from "lucide-react";
+import { CommandInput, CommandList, CommandItem, CommandGroup, CommandDialog } from "@/components/ui/command";
+import { SearchIcon, BriefcaseIcon, BookmarkIcon, ClipboardListIcon, BellIcon, UserIcon, SettingsIcon, SunIcon } from "lucide-react";
 import { useRouter, usePathname } from "next/navigation";
-import { useStore } from "@/lib/store/store-provider";
 
 const NAV_ITEMS = [
   { label: "Jobs", href: "/jobs", icon: BriefcaseIcon },
@@ -19,7 +18,6 @@ export function CommandMenu() {
   const [open, setOpen] = useState(false);
   const router = useRouter();
   const pathname = usePathname();
-  const { profile, updateProfile } = useStore();
 
   useEffect(() => {
     const handler = (e: KeyboardEvent) => {

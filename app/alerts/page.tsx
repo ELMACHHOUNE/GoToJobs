@@ -3,10 +3,9 @@
 import { useState } from "react";
 import { PlusIcon, Trash2Icon, BellIcon, BellOffIcon, Edit2Icon } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
 import {
   Select,
   SelectContent,
@@ -19,7 +18,6 @@ import {
   DialogContent,
   DialogHeader,
   DialogTitle,
-  DialogTrigger,
   DialogFooter,
 } from "@/components/ui/dialog";
 import { Switch } from "@/components/ui/switch";
@@ -29,9 +27,7 @@ import { useStore } from "@/lib/store/store-provider";
 import type { JobAlert } from "@/lib/store/schema";
 import { cn } from "@/lib/utils";
 
-const FREQUENCIES = ["daily", "weekly"] as const;
-
-export default function () {
+export default function AlertsPage() {
   const { alerts, createAlert, updateAlert, removeAlert } = useStore();
   const [open, setOpen] = useState(false);
   const [editing, setEditing] = useState<JobAlert | null>(null);

@@ -8,11 +8,10 @@ import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
 import { Separator } from "@/components/ui/separator";
 import { AlertDialog, AlertDialogTrigger, AlertDialogContent, AlertDialogHeader, AlertDialogTitle, AlertDialogDescription, AlertDialogCancel, AlertDialogAction, AlertDialogFooter } from "@/components/ui/alert-dialog";
-import { cn } from "@/lib/utils";
 
-export default function () {
-  const { theme, setTheme, resolvedTheme } = useTheme();
-  const { clearAll, load, persist, profile, savedJobs, applications, alerts } = useStore();
+export default function SettingsPage() {
+  const { theme, setTheme } = useTheme();
+  const { clearAll, profile, savedJobs, applications, alerts } = useStore();
 
   return (
     <div className="container mx-auto px-4 py-8 max-w-3xl space-y-6">

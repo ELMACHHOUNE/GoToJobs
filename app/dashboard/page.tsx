@@ -1,10 +1,9 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
-import { BriefcaseIcon, BookmarkIcon, ClipboardListIcon, BellIcon, TrendingUpIcon, CalendarIcon, ClockIcon } from "lucide-react";
+import { BookmarkIcon, ClipboardListIcon, TrendingUpIcon, CalendarIcon } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Progress } from "@/components/ui/progress";
 import { Button } from "@/components/ui/button";
 import { JobCard } from "@/components/job-card";
 import { EmptyState } from "@/components/empty-state";
@@ -13,7 +12,7 @@ import { useStore } from "@/lib/store/store-provider";
 import Link from "next/link";
 import type { Job } from "@/lib/jobs/types";
 
-export default function () {
+export default function DashboardPage() {
   const { profile, savedJobs, applications, alerts } = useStore();
   const [allJobs, setAllJobs] = useState<Job[]>([]);
   const profileForMatch = profile;

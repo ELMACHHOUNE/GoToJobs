@@ -5,7 +5,6 @@ import { Building2Icon, MapPinIcon, BriefcaseIcon, ClockIcon, HeartIcon, HeartOf
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardFooter, CardHeader } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Progress } from "@/components/ui/progress";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { useStore } from "@/lib/store/store-provider";
 import type { Job } from "@/lib/jobs/types";
@@ -19,7 +18,7 @@ interface JobCardProps {
   showMatch?: boolean;
 }
 
-export function JobCard({ job, matchScore, matchedSkills, missingSkills, reasons, showMatch = true }: JobCardProps) {
+export function JobCard({ job, matchScore, matchedSkills, missingSkills, showMatch = true }: JobCardProps) {
   const { isSaved, toggleSave } = useStore();
   const saved = isSaved(job.id);
 
