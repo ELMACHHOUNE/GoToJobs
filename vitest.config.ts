@@ -9,12 +9,13 @@ export default defineConfig({
     coverage: {
       provider: "v8",
       reporter: ["text", "json", "html"],
-      exclude: ["node_modules/", "**/*.d.ts", "**/*.config.*", "**/mock*"],
+      exclude: ["node_modules/", "**/*.d.ts", "**/*.config.*"],
     },
   },
   resolve: {
     alias: {
       "@": path.resolve(__dirname, "./"),
+      "server-only": path.resolve(__dirname, "./node_modules/server-only/empty.js"),
     },
   },
 });

@@ -2,6 +2,7 @@ import { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { JobDetails } from "@/components/job-details";
 import { getJobById, getRelatedJobs } from "@/lib/jobs/queries";
+import { calculateMatch } from "@/lib/matching/calculateMatch";
 
 interface Props {
   params: Promise<{ id: string }>;
@@ -29,6 +30,10 @@ export default async function JobDetailsPage({ params }: Props) {
   if (!job) notFound();
 
   const related = await getRelatedJobs(job, 4);
+  const relatedWithMatch = related.map((j) => ({
+    job: j,
+    match: calculateMatch(null, j),
+  }));
 
-  return <JobDetails job={job} related={related} />;
+  return <JobDetails job={job} match={calculateMatch(null, job)} related={relatedWithMatch} />;
 }

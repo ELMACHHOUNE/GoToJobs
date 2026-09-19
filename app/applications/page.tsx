@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { KanbanIcon, PlusIcon, Trash2Icon, MoreHorizontalIcon } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -9,8 +9,6 @@ import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigge
 import { JobCard } from "@/components/job-card";
 import { EmptyState } from "@/components/empty-state";
 import { calculateMatch } from "@/lib/matching/calculateMatch";
-import { defaultProfile } from "@/lib/store/schema";
-import { getMockJobs } from "@/lib/jobs/mock-export";
 import { useStore } from "@/lib/store/store-provider";
 import type { ApplicationStatus, JobApplication } from "@/lib/store/schema";
 import type { Job } from "@/lib/jobs/types";
@@ -41,8 +39,28 @@ const STATUS_COLORS: Record<ApplicationStatus, string> = {
 export default function () {
   const { applications, profile, getApplication, setApplicationStatus, removeApplication } = useStore();
   const [mobileColumn, setMobileColumn] = useState<ApplicationStatus>("saved");
+  const [appJobs, setAppJobs] = useState<Job[]>([]);
 
-  const allJobs = useMemo(() => getMockJobs(), []);
+  useEffect(() => {
+    const ids = applications.map((a) => a.jobId);
+    if (ids.length === 0) {
+      setAppJobs([]);
+      return;
+    }
+    let cancelled = false;
+    fetch(`/api/jobs/batch?${ids.map((id) => `id=${encodeURIComponent(id)}`).join("&")}`)
+      .then((res) => res.json())
+      .then((data) => {
+        if (!cancelled) setAppJobs(data.jobs ?? []);
+      })
+      .catch(() => {
+        if (!cancelled) setAppJobs([]);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [applications]);
+
   const appsByStatus = useMemo(() => {
     const map: Record<ApplicationStatus, ApplicationWithJob[]> = {
       saved: [],
@@ -53,14 +71,14 @@ export default function () {
       withdrawn: [],
     };
     applications.forEach((app) => {
-      const job = allJobs.find((j) => j.id === app.jobId);
+      const job = appJobs.find((j) => j.id === app.jobId);
       if (job) {
         const match = calculateMatch(profile, job);
         map[app.status].push({ ...app, job, match });
       }
     });
     return map;
-  }, [applications, profile]);
+  }, [applications, appJobs, profile]);
 
   return (
     <div className="container mx-auto px-4 py-8">

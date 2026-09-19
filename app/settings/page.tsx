@@ -127,7 +127,7 @@ export default function () {
           <div className="flex items-center justify-between">
             <div className="space-y-1">
               <Label>Sync with cloud</Label>
-              <p className="text-sm text-muted-foreground">Not available in demo mode. Requires authentication.</p>
+              <p className="text-sm text-muted-foreground">Sign in with LinkedIn to sync your profile and saved jobs across devices.</p>
             </div>
             <Button variant="outline" disabled>Sync now</Button>
           </div>
@@ -139,9 +139,9 @@ export default function () {
           <CardTitle>About</CardTitle>
         </CardHeader>
         <CardContent className="space-y-2 text-sm text-muted-foreground">
-          <p>GoToJobs v0.1.0 (Demo)</p>
+          <p>GoToJobs v0.1.0</p>
           <p>Built with Next.js 16, TypeScript, Tailwind CSS, shadcn/ui</p>
-          <p>Job data: Demo/mock data only</p>
+          <p>Job data: Live, synced from LinkedIn</p>
           <p>Matching algorithm: Deterministic, transparent scoring</p>
         </CardContent>
       </Card>

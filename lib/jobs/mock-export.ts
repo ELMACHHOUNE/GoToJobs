@@ -1,1 +1,0 @@
-export { getMockJobs } from "./mock";

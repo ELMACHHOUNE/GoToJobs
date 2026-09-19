@@ -3,7 +3,7 @@ import { calculateMatch, MATCH_WEIGHTS } from "./calculateMatch";
 import type { Profile } from "@/lib/store/schema";
 import type { Job } from "@/lib/jobs/types";
 
-const mockProfile: Profile = {
+const testProfile: Profile = {
   name: "Test User",
   title: "Full Stack Developer",
   bio: "",
@@ -16,10 +16,10 @@ const mockProfile: Profile = {
   updatedAt: "",
 };
 
-const mockJob: Job = {
+const testJob: Job = {
   id: "test-1",
   externalId: "test-1",
-  source: "mock",
+  source: "linkedin",
   title: "Full Stack Developer",
   company: { name: "Test Corp", website: "https://test.com" },
   location: "Casablanca",
@@ -39,21 +39,21 @@ const mockJob: Job = {
 
 describe("calculateMatch", () => {
   it("returns needsProfile=true when profile is null", () => {
-    const result = calculateMatch(null, mockJob);
+    const result = calculateMatch(null, testJob);
     expect(result.needsProfile).toBe(true);
     expect(result.score).toBe(0);
     expect(result.reasons).toContain("Create a profile to get a personalized match");
   });
 
   it("calculates a match score between 0 and 100", () => {
-    const result = calculateMatch(mockProfile, mockJob);
+    const result = calculateMatch(testProfile, testJob);
     expect(result.score).toBeGreaterThanOrEqual(0);
     expect(result.score).toBeLessThanOrEqual(100);
     expect(result.needsProfile).toBe(false);
   });
 
   it("identifies matched and missing skills correctly", () => {
-    const result = calculateMatch(mockProfile, mockJob);
+    const result = calculateMatch(testProfile, testJob);
     expect(result.matchedSkills).toContain("react");
     expect(result.matchedSkills).toContain("node.js");
     expect(result.matchedSkills).toContain("typescript");
@@ -63,7 +63,7 @@ describe("calculateMatch", () => {
   });
 
   it("returns breakdown with all five components", () => {
-    const result = calculateMatch(mockProfile, mockJob);
+    const result = calculateMatch(testProfile, testJob);
     expect(result.breakdown).toHaveProperty("skills");
     expect(result.breakdown).toHaveProperty("title");
     expect(result.breakdown).toHaveProperty("experience");
@@ -77,27 +77,27 @@ describe("calculateMatch", () => {
   });
 
   it("provides human-readable reasons", () => {
-    const result = calculateMatch(mockProfile, mockJob);
+    const result = calculateMatch(testProfile, testJob);
     expect(result.reasons.length).toBeGreaterThan(0);
     expect(result.reasons.some((r) => r.includes("skills"))).toBe(true);
   });
 
   it("handles job with no skills gracefully", () => {
-    const jobNoSkills: Job = { ...mockJob, skills: [] };
-    const result = calculateMatch(mockProfile, jobNoSkills);
+    const jobNoSkills: Job = { ...testJob, skills: [] };
+    const result = calculateMatch(testProfile, jobNoSkills);
     expect(result.score).toBeGreaterThanOrEqual(0);
     expect(result.score).toBeLessThanOrEqual(100);
   });
 
   it("handles profile with no skills", () => {
-    const emptyProfile: Profile = { ...mockProfile, skills: [] };
-    const result = calculateMatch(emptyProfile, mockJob);
+    const emptyProfile: Profile = { ...testProfile, skills: [] };
+    const result = calculateMatch(emptyProfile, testJob);
     expect(result.matchedSkills.length).toBe(0);
-    expect(result.missingSkills.length).toBe(mockJob.skills.length);
+    expect(result.missingSkills.length).toBe(testJob.skills.length);
   });
 
   it("weights match components correctly", () => {
-    const result = calculateMatch(mockProfile, mockJob);
+    const result = calculateMatch(testProfile, testJob);
     const expectedWeightSum = Object.values(MATCH_WEIGHTS).reduce((a, b) => a + b, 0);
     expect(expectedWeightSum).toBe(1.0);
     // The final score should be a weighted combination

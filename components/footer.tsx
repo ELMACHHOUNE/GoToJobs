@@ -38,7 +38,7 @@ export function Footer() {
           </nav>
         </div>
         <div className="mt-8 border-t pt-8 text-center text-sm text-muted-foreground">
-          <p>© {new Date().getFullYear()} GoToJobs. Demo data — not a real job board.</p>
+          <p>© {new Date().getFullYear()} GoToJobs. Live job data synced from LinkedIn.</p>
         </div>
       </div>
     </footer>

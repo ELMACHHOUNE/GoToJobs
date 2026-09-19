@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useMemo } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { FilterIcon, XIcon, Trash2Icon } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -10,9 +10,8 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { JobCard } from "@/components/job-card";
 import { EmptyState } from "@/components/empty-state";
 import { calculateMatch } from "@/lib/matching/calculateMatch";
-import { defaultProfile } from "@/lib/store/schema";
-import { getMockJobs } from "@/lib/jobs/mock-export";
 import { useStore } from "@/lib/store/store-provider";
+import type { Job } from "@/lib/jobs/types";
 
 type FilterValue = "all" | "remote" | "high-match" | "recent";
 
@@ -26,16 +25,38 @@ const FILTER_OPTIONS = [
 export default function () {
   const { savedJobs, profile, isSaved, toggleSave, removeApplication } = useStore();
   const [filter, setFilter] = useState<FilterValue>("all");
+  const [savedJobDetails, setSavedJobDetails] = useState<Job[]>([]);
+
+  useEffect(() => {
+    const ids = savedJobs.map((s) => s.jobId);
+    if (ids.length === 0) {
+      setSavedJobDetails([]);
+      return;
+    }
+    let cancelled = false;
+    fetch(`/api/jobs/batch?${ids.map((id) => `id=${encodeURIComponent(id)}`).join("&")}`)
+      .then((res) => res.json())
+      .then((data) => {
+        if (!cancelled) setSavedJobDetails(data.jobs ?? []);
+      })
+      .catch(() => {
+        if (!cancelled) setSavedJobDetails([]);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [savedJobs]);
 
   const jobs = useMemo(() => {
-    const allJobs = getMockJobs();
     return savedJobs
-      .map((s) => allJobs.find((j) => j.id === s.jobId))
-      .filter((j): j is NonNullable<typeof j> => !!j)
-      .map((job) => {
+      .map((s) => {
+        const job = savedJobDetails.find((j) => j.id === s.jobId);
+        return job ? { job, savedAt: s.savedAt } : null;
+      })
+      .filter((entry): entry is { job: Job; savedAt: string } => !!entry)
+      .map(({ job, savedAt }) => {
         const match = calculateMatch(profile, job);
-        const savedEntry = savedJobs.find((s) => s.jobId === job.id);
-        return { job, match, savedAt: savedEntry?.savedAt };
+        return { job, match, savedAt };
       })
       .filter(({ job, match }) => {
         if (filter === "remote") return job.workplaceType === "remote";
@@ -47,7 +68,7 @@ export default function () {
         if (filter === "recent") return new Date(b.savedAt ?? "").getTime() - new Date(a.savedAt ?? "").getTime();
         return b.match.score - a.match.score;
       });
-  }, [savedJobs, profile, filter]);
+  }, [savedJobs, savedJobDetails, profile, filter]);
 
   if (jobs.length === 0) {
     return (

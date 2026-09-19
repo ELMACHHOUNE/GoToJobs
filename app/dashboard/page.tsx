@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { BriefcaseIcon, BookmarkIcon, ClipboardListIcon, BellIcon, TrendingUpIcon, CalendarIcon, ClockIcon } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -9,15 +9,29 @@ import { Button } from "@/components/ui/button";
 import { JobCard } from "@/components/job-card";
 import { EmptyState } from "@/components/empty-state";
 import { calculateMatch } from "@/lib/matching/calculateMatch";
-import { defaultProfile } from "@/lib/store/schema";
-import { getMockJobs } from "@/lib/jobs/mock-export";
 import { useStore } from "@/lib/store/store-provider";
 import Link from "next/link";
+import type { Job } from "@/lib/jobs/types";
 
 export default function () {
   const { profile, savedJobs, applications, alerts } = useStore();
-  const allJobs = getMockJobs();
-  const profileForMatch = defaultProfile();
+  const [allJobs, setAllJobs] = useState<Job[]>([]);
+  const profileForMatch = profile;
+
+  useEffect(() => {
+    let cancelled = false;
+    fetch("/api/jobs?sort=recent&pageSize=12")
+      .then((res) => res.json())
+      .then((data) => {
+        if (!cancelled) setAllJobs(data.jobs ?? []);
+      })
+      .catch(() => {
+        if (!cancelled) setAllJobs([]);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, []);
 
   const stats = useMemo(() => {
     const matchingJobs = allJobs
@@ -32,14 +46,14 @@ export default function () {
       saved: savedJobs.length,
       applications: applications.length,
     };
-  }, [allJobs, savedJobs, applications]);
+  }, [allJobs, savedJobs, applications, profileForMatch]);
 
   const topMatches = useMemo(() => {
     return allJobs
       .map((job) => ({ job, match: calculateMatch(profileForMatch, job) }))
       .sort((a, b) => b.match.score - a.match.score)
       .slice(0, 3);
-  }, [allJobs]);
+  }, [allJobs, profileForMatch]);
 
   const recentApplications = useMemo(() => {
     return applications
