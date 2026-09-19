@@ -2,7 +2,6 @@ export type JobSource =
   | "linkedin"
   | "greenhouse"
   | "lever"
-  | "adzuna"
   | "remotive"
   | "company"
   | "mock";

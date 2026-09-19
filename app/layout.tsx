@@ -7,6 +7,7 @@ import { Footer } from "@/components/footer";
 import { CommandMenu } from "@/components/command-menu";
 import { ThemeProvider } from "@/components/theme-provider";
 import { StoreProvider } from "@/lib/store/store-provider";
+import { AuthProvider } from "@/components/providers/auth-provider";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -54,21 +55,23 @@ export default function RootLayout({ children }: Readonly<{ children: React.Reac
   return (
     <html lang="en" suppressHydrationWarning className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}>
       <body className="min-h-screen flex flex-col bg-background text-foreground">
-        <ThemeProvider>
-          <StoreProvider>
-            <Navbar />
-            <main className="flex-1">{children}</main>
-            <Footer />
-            <CommandMenu />
-            <Toaster
-              position="bottom-right"
-              toastOptions={{
-                className: "bg-background border",
-                style: { background: "var(--background)", color: "var(--foreground)" },
-              }}
-            />
-          </StoreProvider>
-        </ThemeProvider>
+        <AuthProvider>
+          <ThemeProvider>
+            <StoreProvider>
+              <Navbar />
+              <main className="flex-1">{children}</main>
+              <Footer />
+              <CommandMenu />
+              <Toaster
+                position="bottom-right"
+                toastOptions={{
+                  className: "bg-background border",
+                  style: { background: "var(--background)", color: "var(--foreground)" },
+                }}
+              />
+            </StoreProvider>
+          </ThemeProvider>
+        </AuthProvider>
       </body>
     </html>
   );

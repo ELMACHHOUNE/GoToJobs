@@ -7,11 +7,13 @@ import { defaultProfile } from "@/lib/store/schema";
 
 interface Props {
   params: Promise<{ id: string }>;
+  searchParams: Promise<{ source?: string }>;
 }
 
-export async function generateMetadata({ params }: Props): Promise<Metadata> {
+export async function generateMetadata({ params, searchParams }: Props): Promise<Metadata> {
   const { id } = await params;
-  const job = getJobById(id);
+  const { source = "mock" } = await searchParams;
+  const job = await getJobById(id, source as "mock" | "adzuna");
   if (!job) return { title: "Job not found" };
   return {
     title: `${job.title} at ${job.company.name}`,
@@ -24,18 +26,20 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   };
 }
 
-export default async function JobDetailsPage({ params }: Props) {
+export default async function JobDetailsPage({ params, searchParams }: Props) {
   const { id } = await params;
-  const job = getJobById(id);
+  const { source = "mock" } = await searchParams;
+  const job = await getJobById(id, source as "mock" | "adzuna");
 
   if (!job) notFound();
 
   const profile = defaultProfile();
   const match = calculateMatch(profile, job);
-  const related = getRelatedJobs(job, 4).map((j) => {
-    const m = calculateMatch(profile, j);
-    return { job: j, match: m };
-  });
+  const related = await getRelatedJobs(job, 4);
+  const relatedWithMatch = related.map((j) => ({
+    job: j,
+    match: calculateMatch(profile, j),
+  }));
 
-  return <JobDetails job={job} match={match} related={related} />;
+  return <JobDetails job={job} match={match} related={relatedWithMatch} />;
 }

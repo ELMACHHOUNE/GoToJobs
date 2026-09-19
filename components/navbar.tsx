@@ -3,7 +3,8 @@
 import { useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { BriefcaseIcon, BookmarkIcon, ClipboardListIcon, BellIcon, UserIcon, SettingsIcon, MenuIcon, XIcon, SunIcon, MoonIcon } from "lucide-react";
+import { useSession, signOut } from "next-auth/react";
+import { BriefcaseIcon, BookmarkIcon, ClipboardListIcon, BellIcon, UserIcon, SettingsIcon, MenuIcon, XIcon, SunIcon, MoonIcon, LogOut, Link } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import { useTheme } from "@/components/theme-provider";
@@ -22,6 +23,7 @@ export function Navbar() {
   const [mobileOpen, setMobileOpen] = useState(false);
   const pathname = usePathname();
   const { theme, setTheme, resolvedTheme } = useTheme();
+  const { data: session, status } = useSession();
 
   return (
     <header className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
@@ -60,6 +62,31 @@ export function Navbar() {
             <MoonIcon className="absolute h-5 w-5 rotate-90 scale-0 transition-all dark:rotate-0 dark:scale-100" />
           </Button>
 
+          {status === "loading" ? (
+            <Button variant="ghost" disabled className="w-20">
+              Loading...
+            </Button>
+          ) : session ? (
+            <div className="flex items-center gap-2">
+              <Link href="/profile" className="flex items-center gap-2 px-3 py-2 text-sm font-medium hover:bg-accent rounded-md">
+                {session.user?.image && (
+                  <img src={session.user.image} alt="" className="h-8 w-8 rounded-full" />
+                )}
+                <span className="hidden sm:block">{session.user?.name || "Profile"}</span>
+              </Link>
+              <Button variant="ghost" size="icon" onClick={() => signOut({ callbackUrl: "/" })} aria-label="Sign out">
+                <LogOut className="h-5 w-5" />
+              </Button>
+            </div>
+          ) : (
+            <Link href="/auth/signin">
+              <Button variant="default" className="gap-2" asChild>
+                <Link className="h-5 w-5" />
+                <span>Sign in with LinkedIn</span>
+              </Button>
+            </Link>
+          )}
+
           <Sheet open={mobileOpen} onOpenChange={setMobileOpen}>
             <SheetTrigger asChild>
               <Button variant="ghost" size="icon" className="md:hidden" aria-label="Open menu">
@@ -91,7 +118,7 @@ export function Navbar() {
                   </Link>
                 ))}
               </nav>
-              <div className="mt-6 border-t pt-4">
+              <div className="mt-6 border-t pt-4 space-y-2">
                 <Button
                   variant="ghost"
                   className="w-full justify-start"
@@ -109,6 +136,19 @@ export function Navbar() {
                     </>
                   )}
                 </Button>
+                {session ? (
+                  <Button variant="outline" className="w-full justify-start gap-2" onClick={() => signOut({ callbackUrl: "/" })}>
+                    <LogOut className="h-5 w-5" />
+                    Sign out
+                  </Button>
+                ) : (
+                  <Link href="/auth/signin">
+                    <Button variant="default" className="w-full justify-start gap-2">
+                      <Link className="h-5 w-5" />
+                      Sign in with LinkedIn
+                    </Button>
+                  </Link>
+                )}
               </div>
             </SheetContent>
           </Sheet>

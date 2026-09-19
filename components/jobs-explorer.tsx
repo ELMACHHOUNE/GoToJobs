@@ -31,6 +31,8 @@ export function JobsExplorer() {
     const datePosted = (searchParams.get("datePosted") as JobQueryInput["datePosted"]) || "any";
     const sort = (searchParams.get("sort") as JobQueryInput["sort"]) || "relevance";
     const page = parseInt(searchParams.get("page") || "1", 10);
+    const source = (searchParams.get("source") as JobQueryInput["source"]) || "mock";
+    const country = searchParams.get("country") || "morocco";
     return {
       profile,
       q,
@@ -43,6 +45,8 @@ export function JobsExplorer() {
       sort,
       page,
       pageSize: PAGE_SIZE,
+      source,
+      country,
     };
   }, [searchParams, profile]);
 
@@ -56,6 +60,13 @@ export function JobsExplorer() {
     router.push(`${pathname}?${params.toString()}`);
   }, [searchParams, pathname, router]);
 
+  const setSource = useCallback((source: "mock" | "adzuna") => {
+    const params = new URLSearchParams(searchParams.toString());
+    params.set("source", source);
+    params.delete("page");
+    router.push(`${pathname}?${params.toString()}`);
+  }, [searchParams, pathname, router]);
+
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
@@ -64,9 +75,21 @@ export function JobsExplorer() {
           <p className="text-muted-foreground">
             {total} {total === 1 ? "job" : "jobs"} found
             {buildQueryInput.q && <span className="ml-2">for &ldquo;{buildQueryInput.q}&rdquo;</span>}
+            <span className="ml-2 text-sm px-2 py-0.5 rounded bg-muted">
+              Source: {buildQueryInput.source === "adzuna" ? "Adzuna (Live)" : "Mock Data"}
+            </span>
           </p>
         </div>
         <div className="flex items-center gap-2">
+          <span className="text-sm text-muted-foreground">Source:</span>
+          <select
+            value={buildQueryInput.source || "mock"}
+            onChange={(e) => setSource(e.target.value as "mock" | "adzuna")}
+            className="rounded-md border bg-background px-3 py-1.5 text-sm"
+          >
+            <option value="mock">Mock Data (Demo)</option>
+            <option value="adzuna">Adzuna (Live Jobs)</option>
+          </select>
           <span className="text-sm text-muted-foreground">Sort:</span>
           <select
             value={buildQueryInput.sort || "relevance"}

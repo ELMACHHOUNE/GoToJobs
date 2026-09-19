@@ -15,37 +15,37 @@ describe("getQueryableJobs", () => {
 });
 
 describe("getJobById", () => {
-  it("returns job by valid id", () => {
+  it("returns job by valid id", async () => {
     const jobs = getQueryableJobs();
     const first = jobs[0];
-    const found = getJobById(first.id);
+    const found = await getJobById(first.id);
     expect(found).toBeDefined();
     expect(found?.id).toBe(first.id);
   });
 
-  it("returns undefined for invalid id", () => {
-    const found = getJobById("non-existent-id");
+  it("returns undefined for invalid id", async () => {
+    const found = await getJobById("non-existent-id");
     expect(found).toBeUndefined();
   });
 });
 
 describe("getRelatedJobs", () => {
-  it("returns related jobs based on skill overlap", () => {
+  it("returns related jobs based on skill overlap", async () => {
     const jobs = getQueryableJobs();
     const first = jobs[0];
-    const related = getRelatedJobs(first, 3);
+    const related = await getRelatedJobs(first, 3);
     expect(Array.isArray(related)).toBe(true);
     expect(related.length).toBeLessThanOrEqual(3);
     expect(related.every((j) => j.id !== first.id)).toBe(true);
   });
 
-  it("returns empty array for job with no related skills", () => {
+  it("returns empty array for job with no related skills", async () => {
     const jobNoSkills = {
       ...getQueryableJobs()[0],
       id: "no-skills-test",
       skills: [],
     };
-    const related = getRelatedJobs(jobNoSkills, 3);
+    const related = await getRelatedJobs(jobNoSkills, 3);
     expect(related.length).toBe(0);
   });
 });
@@ -53,9 +53,9 @@ describe("getRelatedJobs", () => {
 describe("searchJobs", () => {
   const profile = defaultProfile();
 
-  it("returns paginated results with metadata", () => {
+  it("returns paginated results with metadata", async () => {
     const input: JobQueryInput = { profile, page: 1, pageSize: 5 };
-    const result = searchJobs(input);
+    const result = await searchJobs(input);
     expect(result).toHaveProperty("jobs");
     expect(result).toHaveProperty("total");
     expect(result).toHaveProperty("page");
@@ -66,8 +66,8 @@ describe("searchJobs", () => {
     expect(result.pageSize).toBe(5);
   });
 
-  it("filters by query string", () => {
-    const result = searchJobs({ profile, q: "react", pageSize: 10 });
+  it("filters by query string", async () => {
+    const result = await searchJobs({ profile, q: "react", pageSize: 10 });
     expect(result.jobs.every((j) =>
       j.title.toLowerCase().includes("react") ||
       j.company.name.toLowerCase().includes("react") ||
@@ -76,66 +76,66 @@ describe("searchJobs", () => {
     )).toBe(true);
   });
 
-  it("filters by location", () => {
-    const result = searchJobs({ profile, locations: ["Casablanca"], pageSize: 10 });
+  it("filters by location", async () => {
+    const result = await searchJobs({ profile, locations: ["Casablanca"], pageSize: 10 });
     expect(result.jobs.every((j) => j.location?.toLowerCase().includes("casablanca"))).toBe(true);
   });
 
-  it("filters by workplace type", () => {
-    const result = searchJobs({ profile, workplaceTypes: ["remote"], pageSize: 10 });
+  it("filters by workplace type", async () => {
+    const result = await searchJobs({ profile, workplaceTypes: ["remote"], pageSize: 10 });
     expect(result.jobs.every((j) => j.workplaceType === "remote")).toBe(true);
   });
 
-  it("filters by employment type", () => {
-    const result = searchJobs({ profile, employmentTypes: ["full-time"], pageSize: 10 });
+  it("filters by employment type", async () => {
+    const result = await searchJobs({ profile, employmentTypes: ["full-time"], pageSize: 10 });
     expect(result.jobs.every((j) => j.employmentType === "full-time")).toBe(true);
   });
 
-  it("filters by experience level", () => {
-    const result = searchJobs({ profile, experienceLevels: ["mid-level"], pageSize: 10 });
+  it("filters by experience level", async () => {
+    const result = await searchJobs({ profile, experienceLevels: ["mid-level"], pageSize: 10 });
     expect(result.jobs.every((j) => j.experienceLevel === "mid-level")).toBe(true);
   });
 
-  it("filters by skills (all must match)", () => {
-    const result = searchJobs({ profile, skills: ["react", "typescript"], pageSize: 10 });
+  it("filters by skills (all must match)", async () => {
+    const result = await searchJobs({ profile, skills: ["react", "typescript"], pageSize: 10 });
     expect(result.jobs.every((j) =>
       j.skills.some((s) => s.toLowerCase() === "react") &&
       j.skills.some((s) => s.toLowerCase() === "typescript")
     )).toBe(true);
   });
 
-  it("sorts by newest", () => {
-    const result = searchJobs({ profile, sort: "newest", pageSize: 10 });
+  it("sorts by newest", async () => {
+    const result = await searchJobs({ profile, sort: "newest", pageSize: 10 });
     for (let i = 1; i < result.jobs.length; i++) {
       expect(new Date(result.jobs[i - 1].publishedAt).getTime())
         .toBeGreaterThanOrEqual(new Date(result.jobs[i].publishedAt).getTime());
     }
   });
 
-  it("sorts by match score", () => {
-    const result = searchJobs({ profile, sort: "match", pageSize: 10 });
+  it("sorts by match score", async () => {
+    const result = await searchJobs({ profile, sort: "match", pageSize: 10 });
     for (let i = 1; i < result.jobs.length; i++) {
-      const matchA = result.jobs[i - 1].skills; // we can't easily get match here, just test no error
+      const matchA = result.jobs[i - 1].skills;
       expect(matchA).toBeDefined();
     }
   });
 
-  it("handles pagination correctly", () => {
-    const page1 = searchJobs({ profile, page: 1, pageSize: 3 });
-    const page2 = searchJobs({ profile, page: 2, pageSize: 3 });
+  it("handles pagination correctly", async () => {
+    const page1 = await searchJobs({ profile, page: 1, pageSize: 3 });
+    const page2 = await searchJobs({ profile, page: 2, pageSize: 3 });
     expect(page1.jobs.length).toBeLessThanOrEqual(3);
     expect(page2.jobs.length).toBeLessThanOrEqual(3);
     expect(page1.page).toBe(1);
     expect(page2.page).toBe(2);
   });
 
-  it("returns totalPages based on total and pageSize", () => {
-    const result = searchJobs({ profile, pageSize: 10 });
+  it("returns totalPages based on total and pageSize", async () => {
+    const result = await searchJobs({ profile, pageSize: 10 });
     expect(result.totalPages).toBe(Math.ceil(result.total / 10));
   });
 
-  it("works without profile", () => {
-    const result = searchJobs({ q: "developer", pageSize: 5 });
+  it("works without profile", async () => {
+    const result = await searchJobs({ q: "developer", pageSize: 5 });
     expect(result.jobs.length).toBeLessThanOrEqual(5);
   });
 });

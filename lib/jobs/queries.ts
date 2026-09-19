@@ -2,6 +2,8 @@ import { calculateMatch } from "@/lib/matching/calculateMatch";
 import type { Profile } from "@/lib/store/schema";
 import { normalizeSkill } from "@/lib/matching/normalizeSkill";
 import { getMockJobs } from "@/lib/jobs/mock";
+import { searchLinkedInJobs, getLinkedInJobById } from "@/lib/jobs/sources";
+import { searchJobsFromDatabase, countJobsFromDatabase } from "@/lib/db/jobs";
 import type {
   DatePostedFilter,
   EmploymentType,
@@ -12,6 +14,8 @@ import type {
   WorkplaceType,
 } from "@/lib/jobs/types";
 import { MATCH_WEIGHTS } from "@/lib/matching/calculateMatch";
+
+export type JobSourceType = "mock" | "linkedin";
 
 export type JobQueryResult = {
   jobs: Job[];
@@ -33,6 +37,8 @@ export type JobQueryInput = {
   sort?: SortOption;
   page?: number;
   pageSize?: number;
+  source?: JobSourceType;
+  country?: string;
 };
 
 /** How fresh a job is (0–1), from publishedAt → now. */
@@ -47,6 +53,73 @@ export function getQueryableJobs(): Job[] {
   return getMockJobs();
 }
 
+async function buildMongoQuery(params: JobSearchParams): Promise<any> {
+  const query: any = { source: "linkedin" };
+  
+  if (params.q) {
+    query.$text = { $search: params.q };
+  }
+  
+  if (params.locations?.length) {
+    query.location = { $in: params.locations.map((l) => new RegExp(l, "i")) };
+  }
+  
+  if (params.workplaceTypes?.length) {
+    query.workplaceType = { $in: params.workplaceTypes };
+  }
+  
+  if (params.employmentTypes?.length) {
+    query.employmentType = { $in: params.employmentTypes };
+  }
+  
+  if (params.experienceLevels?.length) {
+    query.experienceLevel = { $in: params.experienceLevels };
+  }
+  
+  if (params.skills?.length) {
+    query.skills = { $in: params.skills.map((s) => new RegExp(s, "i")) };
+  }
+  
+  if (params.datePosted && params.datePosted !== "any") {
+    const cutoffMs =
+      params.datePosted === "24h"
+        ? 86_400_000
+        : params.datePosted === "3d"
+          ? 3 * 86_400_000
+          : params.datePosted === "week"
+            ? 7 * 86_400_000
+            : 30 * 86_400_000;
+    const cutoffDate = new Date(Date.now() - cutoffMs);
+    query.publishedAt = { $gte: cutoffDate };
+  }
+
+  return query;
+}
+
+function buildSort(params: JobSearchParams): any {
+  const sort: any = {};
+  if (params.sort === "newest") {
+    sort.publishedAt = -1;
+  } else if (params.sort === "salary") {
+    sort["salary.min"] = -1;
+  } else {
+    sort.publishedAt = -1;
+  }
+  return sort;
+}
+
+async function searchJobsFromMongoDB(params: JobSearchParams, options: { page?: number; pageSize?: number } = {}): Promise<Job[]> {
+  const { page = 1, pageSize = 20 } = options;
+  const query = await buildMongoQuery(params);
+  const sort = buildSort(params);
+  return searchJobsFromDatabase(query, { page, pageSize, sort });
+}
+
+async function countJobsFromMongoDB(params: JobSearchParams): Promise<number> {
+  const query = await buildMongoQuery(params);
+  return countJobsFromDatabase(query);
+}
+
 function matchesValue(list: string[] | undefined, value: string): boolean {
   if (!list || list.length === 0) return true;
   return list.some((v) => v.toLowerCase() === value.toLowerCase());
@@ -54,10 +127,10 @@ function matchesValue(list: string[] | undefined, value: string): boolean {
 
 /**
  * Full job search pipeline used by the explorer page and the API route:
- * filter → rank → sort → slice. Kept framework-agnostic (pure functions) so
+ * fetch → filter → rank → sort → slice. Kept framework-agnostic so
  * it is testable without React.
  */
-export function searchJobs({
+export async function searchJobs({
   profile,
   q = "",
   locations,
@@ -69,12 +142,26 @@ export function searchJobs({
   sort = "relevance",
   page = 1,
   pageSize = 12,
-}: JobQueryInput = {}): JobQueryResult {
-  const source = getQueryableJobs();
+  source = "mock",
+  country = "morocco",
+}: JobQueryInput = {}): Promise<JobQueryResult> {
+  let sourceJobs: Job[];
+  let total = 0;
+
+  const searchParams = { q, locations, workplaceTypes, employmentTypes, experienceLevels, skills, datePosted, sort };
+
+  if (source === "linkedin") {
+    sourceJobs = await searchJobsFromMongoDB(searchParams, { page, pageSize });
+    total = await countJobsFromMongoDB(searchParams);
+  } else {
+    sourceJobs = getQueryableJobs();
+    total = sourceJobs.length;
+  }
+
   const term = q.trim().toLowerCase();
   const termTokens = term.split(/\s+/).filter(Boolean);
 
-  const filtered = source.filter((job) => {
+  const filtered = sourceJobs.filter((job) => {
     if (locations?.length && !locations.some((l) => job.location?.toLowerCase().includes(l.toLowerCase()))) {
       return false;
     }
@@ -154,13 +241,13 @@ export function searchJobs({
     }
   });
 
-  const total = sorted.length;
-  const totalPages = Math.max(1, Math.ceil(total / pageSize));
+  const filteredTotal = sorted.length;
+  const totalPages = Math.max(1, Math.ceil(filteredTotal / pageSize));
   const safePage = Math.min(Math.max(1, page), totalPages);
   const start = (safePage - 1) * pageSize;
   const slice = sorted.slice(start, start + pageSize).map((r) => r.job);
 
-  return { jobs: slice, total, page: safePage, pageSize, totalPages };
+  return { jobs: slice, total: filteredTotal, page: safePage, pageSize, totalPages };
 }
 
 /** Lightweight text relevance: how many query tokens land in title/skills/company. */
@@ -176,11 +263,15 @@ function scoreRelevance(job: Job, tokens: string[]): number {
   return hits / tokens.length;
 }
 
-export function getJobById(id: string): Job | undefined {
+export async function getJobById(id: string, source: JobSourceType = "mock"): Promise<Job | undefined> {
+  if (source === "linkedin") {
+    const job = await getLinkedInJobById(id);
+    return job ?? undefined;
+  }
   return getMockJobs().find((j: Job) => j.id === id);
 }
 
-export function getRelatedJobs(job: Job, limit = 4): Job[] {
+export async function getRelatedJobs(job: Job, limit = 4): Promise<Job[]> {
   if (!job.skills || job.skills.length === 0) return [];
   const jobs = getMockJobs().filter((j: Job) => j.id !== job.id);
   const want = new Set(job.skills.map(normalizeSkill));
